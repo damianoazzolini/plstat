@@ -9,7 +9,7 @@
     occurrences/3,
     seq/4,
     factorial/2,
-    choose/3,
+    choose/3
     ]).
 
 
@@ -25,7 +25,7 @@ list:- true.
 */
 
 mean([],0):- !.
-mean(L,M):-
+mean(L,Mean):-
 	length(L,N),
 	sum_list(L,S),
 	Mean is S/N.
@@ -35,11 +35,11 @@ mean(L,M):-
 /**
  * sum_of_squares(+List:number,-SumOfSquares:number)
  * compute \sum_n (x - \mu)^2
- * test: TODO
+ * test: sum_of_squares([1,2,3],2)
  * */
 diff_square(Mu,B,D):-
     AB is B - Mu,
-    D is pow(AB,2).
+    pow(AB,2,D).
 sum_of_squares([],0).
 sum_of_squares(L,SumSquared):-
     mean(L,Mean),
@@ -49,7 +49,7 @@ sum_of_squares(L,SumSquared):-
 /**
  * variance(+List:number,-Variance:number)
  * Variance is the sample variance of the List
- * 1/N * \sum_n (x_i - \mu)^2
+ * 1/(N - 1) * \sum_n (x_i - \mu)^2
  * test: variance([1,2,4,6,7,8,9],9.2380952)
  * */
 % variance(List,Var)
@@ -57,21 +57,22 @@ variance([],0).
 variance(L,Var):-
     length(L,N),
     sum_of_squares(L,SS),
-    Var is (1/N) * SumSquared.
+    N1 is N -1,
+    Var is (1/N1) * SS.
 
 /* std_dev(+List:numbers,-StdDev:number)
  * StdDev is the standard deviation (square root of the variance)
- * test: TODO
+ * test: std_dev([1,2,4,6,7,8,9],3.039424)
  * */
 std_dev(L,StdDev):-
     variance(L,V),
-    StdDev is sqrt(StdDev).
+    StdDev is sqrt(V).
 
 /**
  * range(+List:numbers,-Range:number)
  * Range is the difference between the biggest and the smallest
  * element of the list
- * test: range([1,2,5,6],5).
+ * test: range([1,2,4,6,7,8,9],8).
  * */
 range([],0).
 range(L,Range):-
@@ -82,7 +83,7 @@ range(L,Range):-
 /**
  * midrange(+List:numbers,-Midrange:number)
  * Midrange is (Max - Min) / 2
- * test: TODO
+ * test: midrange([1,2,4,6,7,8,9],4).
  * */
 midrange(L,Midrange):-
     range(L,Range),
@@ -92,7 +93,7 @@ midrange(L,Midrange):-
  * mean_absolute_deviation(+List:numbers,-MAS:number)
  * MAD is the sum of the absolute value of the differences between data values and the mean, divided by the sample size.
  * MAD = 1/N * \sum_i |x - \mu|
- * test: TODO
+ * test: mean_absolute_deviation([1,2,4,6,7,8,9],2.5306122).
  * */
 diff_abs(A,B,D):-
     AB is A - B,
@@ -103,7 +104,7 @@ mean_absolute_deviation(L,MAD):-
     maplist(diff_abs(Mean),L,LD),
     sum_list(LD,S),
     length(L,N),
-    MAD is (1/N) * LD.
+    MAD is (1/N) * S.
 
 /**
  * frequency(+List:numbers,-FreqList:list)
@@ -114,12 +115,12 @@ mean_absolute_deviation(L,MAD):-
 /**
  * occurrences(+Number:number,+List:numbers,-Occ:list)
  * Occ is the occurrences of Number in List
- * test: occurrences([1,2,4,6,4,1],1,2).
+ * test: occurrences([1,2,4,6,7,8,9,1],1,2).
  * */
 occurrences(_,[],0).
 occurrences(E,L,0):- ground(E), \+member(E,L).
 occurrences(E,L,N):-
-    findall(I,nth(I,E,L),LI),
+    findall(I,nth0(I,E,L),LI),
     length(LI,N).
 
 % median: TODO
