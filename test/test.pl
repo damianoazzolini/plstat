@@ -8,15 +8,24 @@ test_list([
     mean,
     sum_of_squares,
     variance,
+    pop_variance,
     std_dev,
+    pop_std_dev,
     range,
     midrange,
     mean_absolute_deviation,
-    occurrences
+    occurrences_2,
+    occurrences_3,
+    min_val,
+    max_val,
+    sum,
+    prod
   ]).
 
 test_plstat:-
     test_list(L),
+    length(L,N),
+    write('Testing '), write(N), writeln(' predicates'),
 	run_tests(L).
 
 test_plstat_rev:-
@@ -42,9 +51,17 @@ test(sum_of_squares_1):- sum_of_squares([1,2,3],2).
 test(variance_1):- variance([1,2,4,6,7,8,9],V),close_to(V,9.2380952).
 :- end_tests(variance).
 
+:- begin_tests(pop_variance, []).
+test(variance_1):- pop_variance([1,2,4,6,7,8,9],V),close_to(V,7.9183673).
+:- end_tests(pop_variance).
+
 :- begin_tests(std_dev, []).
-test(variance_1):- std_dev([1,2,4,6,7,8,9],S),close_to(S,3.039424).
+test(std_dev_1):- std_dev([1,2,4,6,7,8,9],S),close_to(S,3.039424).
 :- end_tests(std_dev).
+
+:- begin_tests(pop_std_dev, []).
+test(std_dev_1):- pop_std_dev([1,2,4,6,7,8,9],S),close_to(S,2.8139594).
+:- end_tests(pop_std_dev).
 
 :- begin_tests(range, []).
 test(range_1):- range([1,2,4,6,7,8,9],8).
@@ -58,6 +75,27 @@ test(midrange_1):- midrange([1,2,4,6,7,8,9],4).
 test(mean_absolute_deviation_1):- mean_absolute_deviation([1,2,4,6,7,8,9],M),close_to(M,2.5306122).
 :- end_tests(mean_absolute_deviation).
 
-:- begin_tests(occurrences, []).
+:- begin_tests(occurrences_3, []).
 test(occurrences_1):- occurrences([1,2,4,6,7,8,9,1],1,2).
-:- end_tests(occurrences).
+:- end_tests(occurrences_3).
+
+:- begin_tests(occurrences_2, []).
+test(occurrences_1):- occurrences([1,2,4,6,7,8,9,1],[[1,2],[2,1],[4,1],[6,1],[7,1],[8,1],[9,1]]).
+:- end_tests(occurrences_2).
+
+:- begin_tests(min_val, []).
+test(min_1):- min_val([1,2,4,6,7,8,9,1],1).
+:- end_tests(min_val).
+
+:- begin_tests(max_val, []).
+test(max_1):- max_val([1,2,4,6,7,8,9,1],9).
+:- end_tests(max_val).
+
+:- begin_tests(sum, []).
+test(sum_1):- sum([1,24,2,3,-1],29).
+:- end_tests(sum).
+
+:- begin_tests(prod, []).
+test(prod_1):- prod([1,24,2,3,-1],-144).
+test(prod_2):- prod([1,24,0,3,-1],0).
+:- end_tests(prod).

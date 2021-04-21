@@ -1,36 +1,37 @@
 :- module(plstat,[
     mean/2,
-    variance/2,
     sum_of_squares/2,
+    variance/2,
+    pop_variance/2,
     std_dev/2,
+    pop_std_dev/2,
     range/2,
     midrange/2,
     mean_absolute_deviation/2,
+    sum/2, % wrapper for sum_list
+    prod/2,
+    min_val/2, % wrapper for min_list
+    max_val/2, % wrapper for max_list
+    occurrences/2,
     occurrences/3,
     seq/4,
     factorial/2,
     choose/3
     ]).
 
-
-%% descriptive statistics
-
 % list all the available predicates
 list:- true. 
 
 /**
-* mean(-List,+Mean:float) is det
-*
-* Mean is the Mean of the list 
+ * mean(-List,+Mean:float) is det
+ * Mean is the Mean of the list
+ * test: mean([1,2,3],2).
 */
-
 mean([],0):- !.
 mean(L,Mean):-
 	length(L,N),
 	sum_list(L,S),
 	Mean is S/N.
-% test: mean([1,2,3],2).
-
 
 /**
  * sum_of_squares(+List:number,-SumOfSquares:number)
@@ -49,10 +50,9 @@ sum_of_squares(L,SumSquared):-
 /**
  * variance(+List:number,-Variance:number)
  * Variance is the sample variance of the List
- * 1/(N - 1) * \sum_n (x_i - \mu)^2
+ * (1/(N - 1)) * \sum_n (x_i - \mu)^2
  * test: variance([1,2,4,6,7,8,9],9.2380952)
  * */
-% variance(List,Var)
 variance([],0).
 variance(L,Var):-
     length(L,N),
@@ -60,12 +60,31 @@ variance(L,Var):-
     N1 is N -1,
     Var is (1/N1) * SS.
 
+/**
+ * pop_variance(+List:number,-Variance:number)
+ * Variance is the population variance of List
+ * (1/N) * \sum_n (x_i - \mu)^2
+ * */
+pop_variance([],0).
+pop_variance(L,Var):-
+    length(L,N),
+    sum_of_squares(L,SS),
+    Var is (1/N) * SS.
+
 /* std_dev(+List:numbers,-StdDev:number)
  * StdDev is the standard deviation (square root of the variance)
  * test: std_dev([1,2,4,6,7,8,9],3.039424)
  * */
 std_dev(L,StdDev):-
     variance(L,V),
+    StdDev is sqrt(V).
+
+/* pop_std_dev(+List:numbers,-StdDev:number)
+ * StdDev is the standard deviation (square root of the variance)
+ * test: pop_std_dev([1,2,4,6,7,8,9],3.039424)
+ * */
+pop_std_dev(L,StdDev):-
+    pop_variance(L,V),
     StdDev is sqrt(V).
 
 /**
@@ -107,21 +126,68 @@ mean_absolute_deviation(L,MAD):-
     MAD is (1/N) * S.
 
 /**
- * frequency(+List:numbers,-FreqList:list)
- * FreqList is a pair [Element,Frequency] for all the elements of the List
- * 
+ * occurrences(+List:number,-Occ:list)
+ * Occ is a list [Value,Occurrences] for each element in List
+ * test: occurrences([1,2,4,6,7,8,9,1],[[1,2],[2,1],[4,1],[6,1],[7,1],[8,1],[9,1]]).
+ * TODO: maybe there is a faster way?
  * */
+occurrences(L,LO):-
+    sort(L,LS),
+    count_occ(LS,L,LO).
+count_occ([],_,[]).
+count_occ([H|T],L,[[H,Occ]|T1]):-
+    occurrences(L,H,Occ),
+    count_occ(T,L,T1).
 
 /**
  * occurrences(+Number:number,+List:numbers,-Occ:list)
  * Occ is the occurrences of Number in List
  * test: occurrences([1,2,4,6,7,8,9,1],1,2).
  * */
-occurrences(_,[],0).
-occurrences(E,L,0):- ground(E), \+member(E,L).
-occurrences(E,L,N):-
-    findall(I,nth0(I,E,L),LI),
+occurrences([],_,0).
+occurrences(L,E,0):- ground(E), \+member(E,L).
+occurrences(L,E,N):-
+    findall(I,nth0(I,L,E),LI),
     length(LI,N).
+
+/**
+ * min_val(+List:numbers,-Min:number)
+ * Min is the minimum of the list, wrapper for min_list/2
+ * test: min_val([1,2,4,6,7,8,9,1],1).
+ * */
+min_val(L,M):-
+    min_list(L,M).
+
+/**
+ * max_val(+List:numbers,-Max:number)
+ * Max is the minimum of the list, wrapper for max_list/2
+ * test: max_val([1,2,4,6,7,8,9,1],9).
+ * */
+max_val(L,M):-
+    max_list(L,M).
+
+/**
+ * sum(+List:numbers,-Sum:number)
+ * Sum is the sum of the elements in List, wrapper for sum_list/2
+ * test: sum([1,24,2,3,-1],29). 
+ * */
+sum(L,S):-
+    sum_list(L,S).
+
+/**
+ * prod(+List:numbers,-Prod:number)
+ * Prod is the product of the elements in List
+ * test: prod([1,24,2,3,-1],-144). 
+ * */
+prod([],0).
+prod(L,P):-
+    prod(L,1,P).
+prod([],N,N).
+prod([0|_],_,0):- !.
+prod([H|T],P0,P1):-
+    PT is P0 * H,
+    prod(T,PT,P1).
+
 
 % median: TODO
 % mode: TODO
