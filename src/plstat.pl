@@ -11,6 +11,9 @@
     range/2,
     midrange/2,
     mean_absolute_deviation/2,
+    covariance/3,
+    correlation/3,
+    weighted_mean/3,
     sum/2, % wrapper for sum_list
     prod/2,
     min_val/2, % wrapper for min_list
@@ -208,9 +211,68 @@ mean_absolute_deviation(L,MAD):-
     length(L,N),
     MAD is (1/N) * S.
 
-% covariance(List1,List2,Cov)
-% correlation(List1,List2,Corr)
-% weighted mean(V,P,W)
+/**
+ * covariance(+List1:numbers,-List2:numbers,-Covariance:number)
+ * Covariance is the covariance of List1 and List2
+ * test: covariance([5,12,18,23,45],[2,8,18,20,28],146.1).
+ * */
+sub(A,B,C):-
+    C is B - A.
+mul(A,B,C):-
+    C is A * B.
+covariance(L1,L2,_):-
+    length(L1,N),
+    length(L2,M),
+    M \= N,
+    writeln('Lists must be of the same length'),
+    write('Found '), write(N), write(' '), writeln(M),
+    false.
+covariance(L1,L2,Cov):-
+    length(L1,N),
+    mean(L1,M1),
+    mean(L2,M2),
+    maplist(sub(M1),L1,LS1),
+    maplist(sub(M2),L2,LS2),
+    maplist(mul,LS1,LS2,LP),
+    sum_list(LP,S),
+    Cov is S / (N - 1).
+
+/**
+ * correlation(+List1:numbers,-List2:numbers,-Correlation:number)
+ * Correlation is the Pearson correlation of List1 and List2
+ * Cov(List1,List2) / (stddev(L1) * stddev(L2))
+ * test: correlation([5,12,18,23,45],[2,8,18,20,28],146.1).
+ * */
+correlation(L1,L2,_):-
+    length(L1,N),
+    length(L2,M),
+    M \= N,
+    writeln('Lists must be of the same length'),
+    write('Found '), write(N), write(' '), writeln(M),
+    false.
+correlation(L1,L2,Corr):-
+    covariance(L1,L2,Cov),
+    std_dev(L1,S1),
+    std_dev(L2,S2),
+    Corr is Cov / (S1 * S2).
+
+/**
+ * weighted_mean(+List:numbers,+Weights:numbers,-WM:number)
+ * WM is the weighted mean: \sum x_i*w_i / \sum w_i
+ * test: weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],19.1972).
+ * */
+weighted_mean(L1,L2,_):-
+    length(L1,N),
+    length(L2,M),
+    M \= N,
+    writeln('Lists must be of the same length'),
+    write('Found '), write(N), write(' '), writeln(M),
+    false.
+weighted_mean(List,Weights,WM):-
+    sum_list(Weights, SW),
+    maplist(mul,List,Weights,LP),
+    sum_list(LP,LS),
+    WM is LS / SW.
 
 %%%%%%%%
 % other utils

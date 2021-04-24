@@ -17,6 +17,9 @@ test_list([
     range,
     midrange,
     mean_absolute_deviation,
+    covariance,
+    correlation,
+    weighted_mean,
     occurrences_2,
     occurrences_3,
     min_val,
@@ -96,6 +99,18 @@ test(midrange_1):- midrange([1,2,4,6,7,8,9],4).
 :- begin_tests(mean_absolute_deviation, []).
 test(mean_absolute_deviation_1):- mean_absolute_deviation([1,2,4,6,7,8,9],M),close_to(M,2.5306122).
 :- end_tests(mean_absolute_deviation).
+
+:- begin_tests(covariance, []).
+test(covariance_1):- covariance([5,12,18,23,45],[2,8,18,20,28],146.1).
+:- end_tests(covariance).
+
+:- begin_tests(correlation, []).
+test(correlation_1):- correlation([5,12,18,23,45],[2,8,18,20,28],C),close_to(C,0.9366).
+:- end_tests(correlation).
+
+:- begin_tests(weighted_mean, []).
+test(weighted_mean_1):- weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],V),close_to(V,19.1972).
+:- end_tests(weighted_mean).
 
 % other utils
 
