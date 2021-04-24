@@ -6,6 +6,9 @@
 
 test_list([
     mean,
+    median,
+    mode,
+    rms,
     sum_of_squares,
     variance,
     pop_variance,
@@ -19,7 +22,10 @@ test_list([
     min_val,
     max_val,
     sum,
-    prod
+    prod,
+    seq,
+    choose,
+    factorial
   ]).
 
 test_plstat:-
@@ -39,12 +45,28 @@ close_to(V,V1):-
     V >= VL,
     V =< VU.
 
+% statistics
 :- begin_tests(mean, []).
 test(mean_1):- mean([1,2,3],2).
 :- end_tests(mean).
 
+:- begin_tests(median, []).
+test(median_1):- median([1,2,3],2).
+test(median_2):- median([1,2,3,4],2.5).
+:- end_tests(median).
+
+:- begin_tests(mode, []).
+test(mode_1):- mode([1,2,3,1],[1]).
+test(mode_2):- mode([1,2,3,4],[1,2,3,4]).
+:- end_tests(mode).
+
+:- begin_tests(rms, []).
+test(rms_1):- rms([1,5,8,3],V),close_to(V,4.97493).
+:- end_tests(rms).
+
 :- begin_tests(sum_of_squares, []).
 test(sum_of_squares_1):- sum_of_squares([1,2,3],2).
+test(sum_of_squares_2):- sum_of_squares([1,2,3,46],1454).
 :- end_tests(sum_of_squares).
 
 :- begin_tests(variance, []).
@@ -75,6 +97,8 @@ test(midrange_1):- midrange([1,2,4,6,7,8,9],4).
 test(mean_absolute_deviation_1):- mean_absolute_deviation([1,2,4,6,7,8,9],M),close_to(M,2.5306122).
 :- end_tests(mean_absolute_deviation).
 
+% other utils
+
 :- begin_tests(occurrences_3, []).
 test(occurrences_1):- occurrences([1,2,4,6,7,8,9,1],1,2).
 :- end_tests(occurrences_3).
@@ -99,3 +123,15 @@ test(sum_1):- sum([1,24,2,3,-1],29).
 test(prod_1):- prod([1,24,2,3,-1],-144).
 test(prod_2):- prod([1,24,0,3,-1],0).
 :- end_tests(prod).
+
+:- begin_tests(seq, []).
+test(seq_1):- seq(1,10,1,[1,2,3,4,5,6,7,8,9,10]).
+:- end_tests(seq).
+
+:- begin_tests(choose, []).
+test(choose_1):- choose(10,3,120).
+:- end_tests(choose).
+
+:- begin_tests(factorial, []).
+test(factorial_1):- factorial(10,3628800).
+:- end_tests(factorial).

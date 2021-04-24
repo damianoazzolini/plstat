@@ -1,5 +1,8 @@
 :- module(plstat,[
     mean/2,
+    median/2,
+    mode/2,
+    rms/2,
     sum_of_squares/2,
     variance/2,
     pop_variance/2,
@@ -23,7 +26,7 @@
 list:- true. 
 
 /**
- * mean(-List,+Mean:float) is det
+ * mean(-List:number,+Mean:float)
  * Mean is the Mean of the list
  * test: mean([1,2,3],2).
 */
@@ -32,6 +35,86 @@ mean(L,Mean):-
 	length(L,N),
 	sum_list(L,S),
 	Mean is S/N.
+
+/**
+ * median(-List:number,+Median:number)
+ * Median is the Median of the list
+ * test: median([1,2,3],2).
+*/
+median([],0):- !.
+median(L,Median):-
+	length(L,N),
+    (1 is N mod 2 ->
+        N1 is N + 1,
+        M is N1/2,
+        nth1(M,L,Median) ;
+    	NH is N/2, 
+        N2 is (N + 2)/2,
+        nth1(NH,L,XN2),
+        nth1(N2,L,XN22),
+        Median is (XN2 + XN22) / 2        
+    ).
+
+/**
+ * mode(-List:number,+Mode:list)
+ * Mode is the Mode of the list
+ * test: mode([1,2,3,1],[1]).
+*/
+comp(<,[_,A1],[_,A2]) :- A1 > A2. % to have in descending order
+comp(>, _, _).
+mode([],0):- !.
+mode(L,Mode):-
+	occurrences(L,Occ),
+    predsort(comp,Occ,X),
+    X = [[_,O]|_],
+    findall(V,member([V,O],Occ),Mode).
+
+/**
+ * percentile(-List:number,-K:number,+Percentile:number)
+ * Percentile is the k-th percentile of the list
+ * test: percentile([1,2,3,4,6,5,9],40,3.2).
+ * TODO
+ * */
+% percentile([],_,0):- !.
+% percentile(_,N,_):-
+%     (N < 0 ; N > 100),
+%     writeln('k must be between 0 and 100'),
+%     false.
+% percentile(L,K,Percentile):-
+%     msort(L,LS),
+%     KP is K / 100,
+%     length(L,N),
+%     I is KP * N,
+%     RI is round(I),
+%     nth1(RI, LS, Percentile).
+
+/**
+ * iqr(+List:number,IQR:number)
+ * IQR is the inter quartile range of List
+ * 3 - 1 quartile
+ * TODO
+ * test: iqr([1,2,3,4,6,5,9],I) 
+ * */
+% iqr([],_):- false.
+% iqr(L,IQR):-
+%     percentile(75,III),
+%     percentile(25,I),
+%     IQR is III - I.
+
+/**
+ * rms(+List:number,RMS:number)
+ * RMS is the root mean square of List
+ * Square root of the sum of the squared data values divided by the number of values
+ * test: rms([1,5,8,3],4.97493).
+ * */
+square(X,XS):-
+    pow(X,2,XS).
+rms([],_):- writeln('The list for rms cannot be empty'),false.
+rms(L,RMS):-
+    length(L,N),
+    maplist(square,L,LS),
+    sum_list(LS, SS),
+    RMS is sqrt(SS / N).
 
 /**
  * sum_of_squares(+List:number,-SumOfSquares:number)
@@ -125,6 +208,14 @@ mean_absolute_deviation(L,MAD):-
     length(L,N),
     MAD is (1/N) * S.
 
+% covariance(List1,List2,Cov)
+% correlation(List1,List2,Corr)
+% weighted mean(V,P,W)
+
+%%%%%%%%
+% other utils
+%%%%%%%%
+
 /**
  * occurrences(+List:number,-Occ:list)
  * Occ is a list [Value,Occurrences] for each element in List
@@ -189,55 +280,40 @@ prod([H|T],P0,P1):-
     prod(T,PT,P1).
 
 
-% median: TODO
-% mode: TODO
-% quartiles: TODO
-% Interquartile Range: The range from Q1 to Q3 is the interquartile range (IQR).
-% Root Mean Square is the square root of the sum of the squared data values divided by n.
-% frequency:
-
 %%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
-seq(A:number,B:number,Step:number,Seq:List): creates a list with a sequence ranging from A to B with step Step
-if A < B, the list is in decreasing order
+ * seq(A:number,B:number,Step:number,Seq:List). 
+ * List is a list with a sequence ranging from A to B with step Step
+ * test: seq(1,10,1,[1,2,3,4,5,6,7,8,9,10])
 */
 seq(A,A,1,[A]):- !.
 seq(A,A,V,[]):- V \= 1.
 seq(_,_,0,[]).
+seq(A,B,_,[]):- A > B.
 seq(A,B,Step,[A|T]):-
 	A < B,
 	A1 is A + Step,
 	seq(A1,B,Step,T).
-seq(A,B,Step,[A|T]):-
-	A > B,
-	A1 is A - Step,
-	seq(A1,B,Step,T).
-
-% test: 
-% seq(1,3,1,[1,2,3])
-% seq(3,1,1,[3,2,1])
-% seq(1,3,2,[1,3])
 
 /**
  * factorial(+N:int,-Factorial:int)
-* Factorial is N! = N*(N-1)*...*2*1
+ * Factorial is N! = N*(N-1)*...*2*1
  * */
 factorial(0,1).
-factorial(1,1).
+factorial(1,1):- !.
 factorial(N,F):-
     factorial_aux(N,1,F).
-factorial_aux(1,F,F).
-factorial(N,V,F):-
+factorial_aux(1,F,F):- !.
+factorial_aux(N,V,F):-
     V1 is V * N,
     N1 is N-1,
-    factorial(N1,V1,F).
-% test
-% factorial(10,3628800).
+    factorial_aux(N1,V1,F).
 
 /**
  * choose(+N:int,+K:int,-C:int)
- * binomial coefficient: fact(N) / (fact(N-K) * fact(K))
+ * C is the binomial coefficient N,K
+ * fact(N) / (fact(N-K) * fact(K))
  * */
 choose(N,K,1):- N =< K.
 choose(N,K,C):-
@@ -247,13 +323,8 @@ choose(N,K,C):-
     factorial(N,NF),
     factorial(K,KF),
     NMinusK is N - K,
-    factorial(NMinusK),
-    C is NF / (NMinusK * KF).
-
-% covariance(List1,List2,Cov)
-% correlation(List1,List2,Corr)
-% choose(N,K,V) % binomial coeff
-% weighted mean(V,P,W)
+    factorial(NMinusK,NMKF),
+    C is NF / (NMKF * KF).
 
 % random variables 
 % expected_value_var(Val,Occ,Exp)
