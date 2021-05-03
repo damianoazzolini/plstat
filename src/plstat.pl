@@ -14,6 +14,12 @@
     covariance/3,
     correlation/3,
     weighted_mean/3,
+    harmonic_mean/2,
+    trimmed_mean/4,
+    trimmed_variance/4,
+    skew/2,
+    kurtosis/2,
+    moment/3,
     sum/2, % wrapper for sum_list
     prod/2,
     min_val/2, % wrapper for min_list
@@ -24,6 +30,10 @@
     factorial/2,
     choose/3
     ]).
+
+% TODO: extend to multidimensional data
+% TODO: read from csv, use the existing libraries
+% TODO: clustering
 
 % list all the available predicates
 list:- true. 
@@ -273,6 +283,86 @@ weighted_mean(List,Weights,WM):-
     maplist(mul,List,Weights,LP),
     sum_list(LP,LS),
     WM is LS / SW.
+
+/**
+ * harmonic_mean(+List:numbers,-HM:number)
+ * HM is the harmonic mean:  n / (1/x1 + 1/x2 + ... + 1/xn)
+ * test: harmonic_mean([1,2,3,4,5,6,7],2.69972).
+ * */
+rec(0,_):- writeln('Cannot divide by 0'), false.
+rec(X,X1):- X1 is 1/X. 
+harmonic_mean([],_):- false.
+harmonic_mean(L,HM):-
+    length(L,N),
+    maplist(rec,L,LR),
+    sum_list(LR,SLR),
+    HM is N / SLR.
+
+/**
+ * trimmed_mean(+List:numbers,+Lower:number,+Upper:number,-TM:number)
+ * TM is the trimmed mean: the mean computed by considering only numbers 
+ * in the range [Lower,Upper]
+ * test: trimmed_mean([1,2,3,4,5,6,7],3,5,4).
+ * */
+trimmed_mean([],_,_,0).
+trimmed_mean(L,Lower,Upper,TM):-
+    include(between(Lower,Upper),L,LO),
+    mean(LO,TM).
+
+/**
+ * trimmed_variance(+List:numbers,+Lower:number,+Upper:number,-TV:number)
+ * TV is the trimmed variance: the variance computed by considering only numbers 
+ * in the range [Lower,Upper]
+ * test: trimmed_variance([1,2,3,4,5,6,7],3,5,1.0).
+ * */
+trimmed_variance([],_,_,0).
+trimmed_variance(L,Lower,Upper,TV):-
+    include(between(Lower,Upper),L,LO),
+    variance(LO,TV).
+
+/**
+ * moment(+List:numbers,+M:integer,-Moment:number)
+ * Moment is the M-th moment about the mean for List
+ * 1/n \sum (x_i - x_mean) ^ M
+ * test: moment([1,2,3,4,5],2,2)
+ * */
+diff_and_power(Exp,Mean,Number,R):-
+    D is Number - Mean,
+    pow(D,Exp,R).
+moment([],_,0).
+moment(L,M,Moment):-
+    length(L,N),
+    mean(L,Mean),
+    maplist(diff_and_power(M,Mean),L,Res),
+    sum(Res,S),
+    Moment is 1/N * S.
+
+/**
+ * skew(+List:numbers,-Skew:number)
+ * Skew is the sample skewness of List
+ * Skew = m_3 / (m_2)^(3/2)
+ * test: skew([2,8,0,4,1,9,9,0],0.26505541)
+ * TODO: consider also the version with bias false
+ * */
+skew([],0).
+skew(List,Skew):-
+    moment(List,2,M2),
+    moment(List,3,M3),
+    pow(M2,3/2,Den),
+    Skew is M3 / Den.
+
+/**
+ * kurtosis(+List:numbers,-Kurtosis:number)
+ * Kurtosis is the fourth central moment divided by 
+ * the square of the variance. 
+ * test: kurtosis([3,5,7,2,7],1.3731508875)
+ * */
+kurtosis([],0).
+kurtosis(List,Kurtosis):-
+    moment(List,4,L4),
+    moment(List,2,L2),
+    pow(L2,2,L22),
+    Kurtosis is L4 / L22.
 
 %%%%%%%%
 % other utils

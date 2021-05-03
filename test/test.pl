@@ -1,4 +1,4 @@
-:- module(test_plstat, [test_plstat/0,test_plstat_rev/0]).
+:- module(test_plstat, [test/0,test_plstat_rev/0]).
 :- use_module(library(plunit)).
 
 :- set_random(seed(100)).
@@ -20,6 +20,12 @@ test_list([
     covariance,
     correlation,
     weighted_mean,
+    harmonic_mean,
+    trimmed_mean,
+    trimmed_variance,
+    moment,
+    skew,
+    kurtosis,
     occurrences_2,
     occurrences_3,
     min_val,
@@ -31,7 +37,7 @@ test_list([
     factorial
   ]).
 
-test_plstat:-
+test:-
     test_list(L),
     length(L,N),
     write('Testing '), write(N), writeln(' predicates'),
@@ -111,6 +117,35 @@ test(correlation_1):- correlation([5,12,18,23,45],[2,8,18,20,28],C),close_to(C,0
 :- begin_tests(weighted_mean, []).
 test(weighted_mean_1):- weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],V),close_to(V,19.1972).
 :- end_tests(weighted_mean).
+
+:- begin_tests(harmonic_mean, []).
+test(harmonic_mean_1):- harmonic_mean([1,2,3,4,5,6,7],V),close_to(V,2.69972).
+test(harmonic_mean_2):- harmonic_mean([1,4],V),close_to(V,1.6).
+:- end_tests(harmonic_mean).
+
+:- begin_tests(trimmed_mean, []).
+test(trimmed_mean_1):- trimmed_mean([1,2,3,4,5,6,7],3,5,4).
+:- end_tests(trimmed_mean).
+
+:- begin_tests(trimmed_variance, []).
+test(trimmed_variance_1):- trimmed_variance([1,2,3,4,5,6,7],3,5,1.0).
+:- end_tests(trimmed_variance).
+
+:- begin_tests(moment, []).
+test(moment_1):- moment([1,2,3,4,5],1,0.0).
+test(moment_2):- moment([1,2,3,4,5],2,2.0).
+:- end_tests(moment).
+
+:- begin_tests(skew, []).
+test(skew_1):- skew([2,8,0,4,1,9,9,0],V),close_to(V,0.26505541).
+test(skew_2):- skew([1,2,3,4,5],0.0).
+test(skew_3):- skew([2,4,7,3,2],V),close_to(V,0.9704949).
+:- end_tests(skew).
+
+:- begin_tests(kurtosis, []).
+test(kurtosis_1):- kurtosis([26,12,16,56,112,24],K),close_to(K,3.05052136).
+test(kurtosis_2):- kurtosis([3,5,7,2,7],K),close_to(K,1.37315088757).
+:- end_tests(kurtosis).
 
 % other utils
 
