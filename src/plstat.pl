@@ -38,13 +38,25 @@
 % list all the available predicates
 list:- true. 
 
+% multidimensional wrapper
+multidim2(Predicate,List,Res):-
+    ( List = [A|_], is_list(A) -> 
+        maplist(Predicate,List,Res);
+        Call =.. [Predicate,List,Res],
+        Call
+    ).
+
 /**
  * mean(-List:number,+Mean:float)
  * Mean is the Mean of the list
- * test: mean([1,2,3],2).
+ * example: mean([1,2,3],2).
+ * example: mean([[1,3,4],[7,67]],[2.6666666666666665, 37]).
 */
 mean([],0):- !.
+mean([E],E):- !.
 mean(L,Mean):-
+    multidim2(mean_,L,Mean).
+mean_(L,Mean):-
 	length(L,N),
 	sum_list(L,S),
 	Mean is S/N.
@@ -52,10 +64,13 @@ mean(L,Mean):-
 /**
  * median(-List:number,+Median:number)
  * Median is the Median of the list
- * test: median([1,2,3],2).
+ * example: median([1,2,3],2).
 */
 median([],0):- !.
+median([E],E):- !.
 median(L,Median):-
+    multidim2(median_,L,Median).
+median_(L,Median):-
 	length(L,N),
     (1 is N mod 2 ->
         N1 is N + 1,
@@ -76,7 +91,10 @@ median(L,Median):-
 comp(<,[_,A1],[_,A2]) :- A1 > A2. % to have in descending order
 comp(>, _, _).
 mode([],0):- !.
+mode([E],E):- !.
 mode(L,Mode):-
+    multidim2(mode_,L,Mode).
+mode_(L,Mode):-
 	occurrences(L,Occ),
     predsort(comp,Occ,X),
     X = [[_,O]|_],
@@ -122,8 +140,10 @@ mode(L,Mode):-
  * */
 square(X,XS):-
     pow(X,2,XS).
-rms([],_):- writeln('The list for rms cannot be empty'),false.
+rms([],_):- writeln('The list for rms cannot be empty'), false.
 rms(L,RMS):-
+    multidim2(rms_,L,RMS).
+rms_(L,RMS):-
     length(L,N),
     maplist(square,L,LS),
     sum_list(LS, SS),
@@ -138,7 +158,10 @@ diff_square(Mu,B,D):-
     AB is B - Mu,
     pow(AB,2,D).
 sum_of_squares([],0).
-sum_of_squares(L,SumSquared):-
+sum_of_squares([_],0).
+sum_of_squares(List,SumOfSquares):-
+    multidim2(sum_of_squares_,List,SumOfSquares).
+sum_of_squares_(L,SumSquared):-
     mean(L,Mean),
     maplist(diff_square(Mean),L,Res),
     sum_list(Res,SumSquared).
