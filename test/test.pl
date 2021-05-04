@@ -26,8 +26,12 @@ test_list([
     moment,
     skew,
     kurtosis,
+    nth_row,
+    nth_column,
     occurrences_2,
     occurrences_3,
+    swap_rows_columns,
+    split_n_parts,
     min_val,
     max_val,
     sum,
@@ -63,13 +67,13 @@ test(mean_2):- mean([[1,3,4],[7,67]],[2.6666666666666665, 37]).
 :- begin_tests(median, []).
 test(median_1):- median([1,2,3],2).
 test(median_2):- median([1,2,3,4],2.5).
-test(median_3):- median([[1,5,64],[27,67]],[5, 47]).
+test(median_3):- median([[1,5,64],[27,67]],[5,47]).
 :- end_tests(median).
 
 :- begin_tests(mode, []).
 test(mode_1):- mode([1,2,3,1],[1]).
 test(mode_2):- mode([1,2,3,4],[1,2,3,4]).
-test(mode_3):- mode([[1,5,64],[27,67]],[[1,5,64], [27,67]]).
+test(mode_3):- mode([[1,5,64],[27,67]],[[1,5,64],[27,67]]).
 :- end_tests(mode).
 
 :- begin_tests(rms, []).
@@ -85,10 +89,12 @@ test(sum_of_squares_3):- sum_of_squares([[1,5,66],[27,67]],[2654,800]).
 
 :- begin_tests(variance, []).
 test(variance_1):- variance([1,2,4,6,7,8,9],V),close_to(V,9.2380952).
+test(variance_2):- variance([1,4,6,72,1],956.7).
 :- end_tests(variance).
 
 :- begin_tests(pop_variance, []).
-test(variance_1):- pop_variance([1,2,4,6,7,8,9],V),close_to(V,7.9183673).
+test(pop_variance_1):- pop_variance([1,2,4,6,7,8,9],V),close_to(V,7.9183673).
+test(pop_variance_2):- pop_variance([1,4,6,72,1],V),close_to(V,765.3600).
 :- end_tests(pop_variance).
 
 :- begin_tests(std_dev, []).
@@ -153,6 +159,22 @@ test(kurtosis_2):- kurtosis([3,5,7,2,7],K),close_to(K,1.37315088757).
 :- end_tests(kurtosis).
 
 % other utils
+
+:- begin_tests(nth_row, []).
+test(nth_row_1):- nth_row([[1,2],[3,4]],2,[3,4]).
+:- end_tests(nth_row).
+
+:- begin_tests(nth_column, []).
+test(nth_column_1):- nth_column([[1,2],[3,4]],2,[2,4]).
+:- end_tests(nth_column).
+
+:- begin_tests(swap_rows_columns, []).
+test(swap_rows_columns_1):- swap_rows_columns([[1,2,4],[3,6,7]],[[1,3],[2,6],[4,7]]).
+:- end_tests(swap_rows_columns).
+
+:- begin_tests(split_n_parts, []).
+test(split_n_parts_1):- split_n_parts([1,2,4,3,7,6],2,[[1,2],[4,3],[7,6]]).
+:- end_tests(split_n_parts).
 
 :- begin_tests(occurrences_3, []).
 test(occurrences_1):- occurrences([1,2,4,6,7,8,9,1],1,2).

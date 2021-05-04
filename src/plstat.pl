@@ -24,16 +24,16 @@
     prod/2,
     min_val/2, % wrapper for min_list
     max_val/2, % wrapper for max_list
+    nth_row/3,
+    nth_column/3,
+    swap_rows_columns/2,
+    split_n_parts/3,
     occurrences/2,
     occurrences/3,
     seq/4,
     factorial/2,
     choose/3
     ]).
-
-% TODO: extend to multidimensional data
-% TODO: read from csv, use the existing libraries
-% TODO: clustering
 
 % list all the available predicates
 list:- true. 
@@ -48,12 +48,13 @@ multidim2(Predicate,List,Res):-
 
 /**
  * mean(-List:number,+Mean:float)
- * Mean is the Mean of the list
+ * Mean is the mean of the list List
+ * List can also be a list of lists
  * example: mean([1,2,3],2).
  * example: mean([[1,3,4],[7,67]],[2.6666666666666665, 37]).
 */
 mean([],0):- !.
-mean([E],E):- !.
+mean([E],E):- number(E), !.
 mean(L,Mean):-
     multidim2(mean_,L,Mean).
 mean_(L,Mean):-
@@ -63,11 +64,13 @@ mean_(L,Mean):-
 
 /**
  * median(-List:number,+Median:number)
- * Median is the Median of the list
+ * Median is the median of the list List
+ * List can also be a list of lists
  * example: median([1,2,3],2).
+ * example: median([[1,5,64],[27,67]],[5, 47]).
 */
 median([],0):- !.
-median([E],E):- !.
+median([E],E):- number(E), !.
 median(L,Median):-
     multidim2(median_,L,Median).
 median_(L,Median):-
@@ -85,13 +88,15 @@ median_(L,Median):-
 
 /**
  * mode(-List:number,+Mode:list)
- * Mode is the Mode of the list
- * test: mode([1,2,3,1],[1]).
+ * Mode is the mode of the list List
+ * List can also be a list of lists
+ * example: mode([1,2,3,1],[1]).
+ * example: mode([[1,5,64],[27,67]],[[1,5,64], [27,67]])
 */
 comp(<,[_,A1],[_,A2]) :- A1 > A2. % to have in descending order
 comp(>, _, _).
 mode([],0):- !.
-mode([E],E):- !.
+mode([E],E):- number(E), !.
 mode(L,Mode):-
     multidim2(mode_,L,Mode).
 mode_(L,Mode):-
@@ -134,9 +139,10 @@ mode_(L,Mode):-
 
 /**
  * rms(+List:number,RMS:number)
- * RMS is the root mean square of List
+ * RMS is the root mean square of the list List
+ * List can also be a list of lists
  * Square root of the sum of the squared data values divided by the number of values
- * test: rms([1,5,8,3],4.97493).
+ * example: rms([1,5,8,3],4.97493).
  * */
 square(X,XS):-
     pow(X,2,XS).
@@ -151,8 +157,10 @@ rms_(L,RMS):-
 
 /**
  * sum_of_squares(+List:number,-SumOfSquares:number)
+ * SumOfSquares is the sum of squares of the list List
+ * List can also be a list of lists
  * compute \sum_n (x - \mu)^2
- * test: sum_of_squares([1,2,3],2)
+ * example: sum_of_squares([1,2,3],2)
  * */
 diff_square(Mu,B,D):-
     AB is B - Mu,
@@ -168,52 +176,71 @@ sum_of_squares_(L,SumSquared):-
 
 /**
  * variance(+List:number,-Variance:number)
- * Variance is the sample variance of the List
+ * Variance is the sample variance of the list List
+ * List can also be a list of lists
  * (1/(N - 1)) * \sum_n (x_i - \mu)^2
- * test: variance([1,2,4,6,7,8,9],9.2380952)
+ * example: variance([1,2,4,6,7,8,9],9.2380952)
  * */
-variance([],0).
+variance([],0):- !.
+variance([E],0):- number(E), !.
 variance(L,Var):-
+    multidim2(variance_,L,Var).
+variance_(L,Var):-
     length(L,N),
     sum_of_squares(L,SS),
-    N1 is N -1,
+    N1 is N - 1,
     Var is (1/N1) * SS.
 
 /**
  * pop_variance(+List:number,-Variance:number)
- * Variance is the population variance of List
+ * Variance is the population variance of the list List
+ * List can also be a list of lists
  * (1/N) * \sum_n (x_i - \mu)^2
+ * pop_variance([1,4,6,72,1],765.3600).
  * */
-pop_variance([],0).
+pop_variance([],0):- !.
+pop_variance([E],0):- number(E), !.
 pop_variance(L,Var):-
+    multidim2(pop_variance_,L,Var).
+pop_variance_(L,Var):-
     length(L,N),
     sum_of_squares(L,SS),
     Var is (1/N) * SS.
 
 /* std_dev(+List:numbers,-StdDev:number)
- * StdDev is the standard deviation (square root of the variance)
- * test: std_dev([1,2,4,6,7,8,9],3.039424)
+ * StdDev is the standard deviation (square root of the sample variance)
+ * List can also be a list of lists
+ * example: std_dev([1,2,4,6,7,8,9],3.039424)
  * */
 std_dev(L,StdDev):-
+    multidim2(std_dev_,L,StdDev).
+std_dev_(L,StdDev):-
     variance(L,V),
     StdDev is sqrt(V).
 
 /* pop_std_dev(+List:numbers,-StdDev:number)
- * StdDev is the standard deviation (square root of the variance)
- * test: pop_std_dev([1,2,4,6,7,8,9],3.039424)
+ * StdDev is the standard deviation (square root of the population variance)
+ * List can also be a list of lists
+ * example: pop_std_dev([1,2,4,6,7,8,9],3.039424)
  * */
 pop_std_dev(L,StdDev):-
+    multidim2(pop_std_dev_,L,StdDev).
+pop_std_dev_(L,StdDev):-
     pop_variance(L,V),
     StdDev is sqrt(V).
 
 /**
  * range(+List:numbers,-Range:number)
  * Range is the difference between the biggest and the smallest
- * element of the list
- * test: range([1,2,4,6,7,8,9],8).
+ * element of the list List
+ * List can also be a list of lists
+ * example: range([1,2,4,6,7,8,9],8).
  * */
-range([],0).
+range([],0):- !.
+range([E],E):- number(E), !.
 range(L,Range):-
+    multidim2(range_,L,Range).
+range_(L,Range):-
     min_list(L,Min),
     max_list(L,Max),
     Range is Max - Min.
@@ -221,9 +248,12 @@ range(L,Range):-
 /**
  * midrange(+List:numbers,-Midrange:number)
  * Midrange is (Max - Min) / 2
- * test: midrange([1,2,4,6,7,8,9],4).
+ * List can also be a list of lists
+ * example: midrange([1,2,4,6,7,8,9],4).
  * */
-midrange(L,Midrange):-
+midrange(L,Range):-
+    multidim2(midrange_,L,Range).
+midrange_(L,Midrange):-
     range(L,Range),
     Midrange is Range / 2.
 
@@ -231,13 +261,16 @@ midrange(L,Midrange):-
  * mean_absolute_deviation(+List:numbers,-MAS:number)
  * MAD is the sum of the absolute value of the differences between data values and the mean, divided by the sample size.
  * MAD = 1/N * \sum_i |x - \mu|
- * test: mean_absolute_deviation([1,2,4,6,7,8,9],2.5306122).
+ * List can also be a list of lists
+ * example: mean_absolute_deviation([1,2,4,6,7,8,9],2.5306122).
  * */
 diff_abs(A,B,D):-
     AB is A - B,
     D is abs(AB).
-mean_absolute_deviation([],0).
+mean_absolute_deviation([],0):- !.
 mean_absolute_deviation(L,MAD):-
+    multidim2(mean_absolute_deviation_,L,MAD).
+mean_absolute_deviation_(L,MAD):-
     mean(L,Mean),
     maplist(diff_abs(Mean),L,LD),
     sum_list(LD,S),
@@ -247,7 +280,7 @@ mean_absolute_deviation(L,MAD):-
 /**
  * covariance(+List1:numbers,-List2:numbers,-Covariance:number)
  * Covariance is the covariance of List1 and List2
- * test: covariance([5,12,18,23,45],[2,8,18,20,28],146.1).
+ * example: covariance([5,12,18,23,45],[2,8,18,20,28],146.1).
  * */
 sub(A,B,C):-
     C is B - A.
@@ -272,9 +305,9 @@ covariance(L1,L2,Cov):-
 
 /**
  * correlation(+List1:numbers,-List2:numbers,-Correlation:number)
- * Correlation is the Pearson correlation of List1 and List2
- * Cov(List1,List2) / (stddev(L1) * stddev(L2))
- * test: correlation([5,12,18,23,45],[2,8,18,20,28],146.1).
+ * Correlation is the correlation of List1 and List2
+ * covariance(List1,List2) / (std_dev(List1) * std_dev(List2))
+ * example: correlation([5,12,18,23,45],[2,8,18,20,28],146.1).
  * */
 correlation(L1,L2,_):-
     length(L1,N),
@@ -292,7 +325,7 @@ correlation(L1,L2,Corr):-
 /**
  * weighted_mean(+List:numbers,+Weights:numbers,-WM:number)
  * WM is the weighted mean: \sum x_i*w_i / \sum w_i
- * test: weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],19.1972).
+ * example: weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],19.1972).
  * */
 weighted_mean(L1,L2,_):-
     length(L1,N),
@@ -310,12 +343,15 @@ weighted_mean(List,Weights,WM):-
 /**
  * harmonic_mean(+List:numbers,-HM:number)
  * HM is the harmonic mean:  n / (1/x1 + 1/x2 + ... + 1/xn)
- * test: harmonic_mean([1,2,3,4,5,6,7],2.69972).
+ * List can also be a list of lists
+ * example: harmonic_mean([1,2,3,4,5,6,7],2.69972).
  * */
 rec(0,_):- writeln('Cannot divide by 0'), false.
-rec(X,X1):- X1 is 1/X. 
+rec(X,X1):- X1 is 1/X.
 harmonic_mean([],_):- false.
 harmonic_mean(L,HM):-
+    multidim2(harmonic_mean_,L,HM).
+harmonic_mean_(L,HM):-
     length(L,N),
     maplist(rec,L,LR),
     sum_list(LR,SLR),
@@ -325,7 +361,7 @@ harmonic_mean(L,HM):-
  * trimmed_mean(+List:numbers,+Lower:number,+Upper:number,-TM:number)
  * TM is the trimmed mean: the mean computed by considering only numbers 
  * in the range [Lower,Upper]
- * test: trimmed_mean([1,2,3,4,5,6,7],3,5,4).
+ * example: trimmed_mean([1,2,3,4,5,6,7],3,5,4).
  * */
 trimmed_mean([],_,_,0).
 trimmed_mean(L,Lower,Upper,TM):-
@@ -336,7 +372,7 @@ trimmed_mean(L,Lower,Upper,TM):-
  * trimmed_variance(+List:numbers,+Lower:number,+Upper:number,-TV:number)
  * TV is the trimmed variance: the variance computed by considering only numbers 
  * in the range [Lower,Upper]
- * test: trimmed_variance([1,2,3,4,5,6,7],3,5,1.0).
+ * example: trimmed_variance([1,2,3,4,5,6,7],3,5,1.0).
  * */
 trimmed_variance([],_,_,0).
 trimmed_variance(L,Lower,Upper,TV):-
@@ -347,7 +383,7 @@ trimmed_variance(L,Lower,Upper,TV):-
  * moment(+List:numbers,+M:integer,-Moment:number)
  * Moment is the M-th moment about the mean for List
  * 1/n \sum (x_i - x_mean) ^ M
- * test: moment([1,2,3,4,5],2,2)
+ * example: moment([1,2,3,4,5],2,2)
  * */
 diff_and_power(Exp,Mean,Number,R):-
     D is Number - Mean,
@@ -364,11 +400,14 @@ moment(L,M,Moment):-
  * skew(+List:numbers,-Skew:number)
  * Skew is the sample skewness of List
  * Skew = m_3 / (m_2)^(3/2)
- * test: skew([2,8,0,4,1,9,9,0],0.26505541)
+ * List can also be a list of lists
+ * example: skew([2,8,0,4,1,9,9,0],0.26505541)
  * TODO: consider also the version with bias false
  * */
-skew([],0).
-skew(List,Skew):-
+skew([],0):- !.
+skew(L,Skew):-
+    multidim2(skew_,L,Skew).
+skew_(List,Skew):-
     moment(List,2,M2),
     moment(List,3,M3),
     pow(M2,3/2,Den),
@@ -377,19 +416,85 @@ skew(List,Skew):-
 /**
  * kurtosis(+List:numbers,-Kurtosis:number)
  * Kurtosis is the fourth central moment divided by 
- * the square of the variance. 
- * test: kurtosis([3,5,7,2,7],1.3731508875)
+ * the square of the variance.
+ * List can also be a list of lists
+ * example: kurtosis([3,5,7,2,7],1.3731508875)
  * */
 kurtosis([],0).
-kurtosis(List,Kurtosis):-
+kurtosis(L,Kurtosis):-
+    multidim2(kurtosis_,L,Kurtosis).
+kurtosis_(List,Kurtosis):-
     moment(List,4,L4),
     moment(List,2,L2),
     pow(L2,2,L22),
     Kurtosis is L4 / L22.
 
+%%%%%%%
+% random variables
+%%%%%%%
+
+
 %%%%%%%%
 % other utils
 %%%%%%%%
+
+/**
+ * nth_row(+ListOfList:numbers,+Nth:integer,-NthRow:List)
+ * NthRow is the nth row of ListOfList, counting from 1
+ * example: nth_row([[1,2],[3,4]],2,[3,4]).
+ * */
+nth_row(L,Nth,NthRow):-
+    nth1(Nth,L,NthRow).
+
+/**
+ * nth_column(+ListOfList:numbers,+Nth:integer,-NthColumn:List)
+ * NthColumn is the nth column of ListOfList, counting from 1
+ * example: nth_column([[1,2],[3,4]],2,[2,4]).
+ * */
+nth_column(L,Nth,NthColumn):-
+    findall(E,(member(R,L),nth1(Nth,R,E)),NthColumn).
+
+/**
+ * swap_rows_columns(+LRows:numbers,+ListOfLists:LColumns)
+ * LColumns is LRows transposed (rows and columns swapped)
+ * example: swap_rows_columns([[1,2,4],[3,6,7]],[[1,3],[2,6],[4,7]]).
+ * */
+swap_rows_columns([],[]).
+swap_rows_columns(L1,L2):-
+    length(L1,N1),
+    length(L2,N2),
+    N1 \= N2,
+    writeln("Lists must be of the same length"),
+    false.
+swap_rows_columns([H|T],MT):-
+    transpose(H,[H|T],MT).
+transpose([],_,[]).
+transpose([_|T],M,[HMT|TMT]):-
+    transposeIn(M,HMT,M1),
+    transpose(T,M1,TMT).
+transposeIn([],[],[]).
+transposeIn([[V1|V2]|T],[V1|TV],[V2|TM]):-
+    transposeIn(T,TV,TM).
+
+/**
+ * split_n_parts(+List:numbers,+Parts:number,-PartsList:numbers)
+ * PartsList is a list of list obtained by splitting list List
+ * in Parts parts
+ * example: split_n_parts([1,2,4,3,7,6],2,[[1,2],[4,3],[7,6]]).
+ * */
+split_n_parts(L,1,L):- !.
+split_n_parts(_,N,_):- N =< 0, !, false.
+split_n_parts(L,N,_):- 
+    length(L,LN), 
+    A is LN mod N, 
+    A \= 0,
+    writeln("List cannot be divided in the desired parts"), !,
+    false.
+split_n_parts([],_,[]):- !.
+split_n_parts(List,Parts,[H|T]):-
+    length(H,Parts),
+    append(H,LT,List),
+    split_n_parts(LT,Parts,T).
 
 /**
  * occurrences(+List:number,-Occ:list)
