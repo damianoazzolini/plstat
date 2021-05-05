@@ -32,6 +32,11 @@
     split_n_parts/3,
     occurrences/2,
     occurrences/3,
+    normalize_prob/2,
+    delete_nth/3,
+    sample/3,
+    sample/4,
+    sample/5,
     seq/4,
     factorial/2,
     choose/3
@@ -453,7 +458,7 @@ kurtosis_(List,Kurtosis):-
  * example: rank([0,2,3,2],max,[1,3,4,3]).
  * example: rank([0,2,3,2],dense,[1,2,3,2]).
  * example: rank([0,2,3,2],ordinal,[1,2,4,3]).
- * TODO: allow also multidimensional data: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rankdata.html#scipy.stats.rankdata
+ * rank([[0,2,3,2],[1,4,5]],max,[[1,4,5,4],[2,6,7]]).
  * */
 rank(L,Rank):-
     rank(L,average,Rank).
@@ -607,7 +612,7 @@ split_n_parts(List,Parts,[H|T]):-
 /**
  * occurrences(+List:number,-Occ:list)
  * Occ is a list [Value,Occurrences] for each element in List
- * test: occurrences([1,2,4,6,7,8,9,1],[[1,2],[2,1],[4,1],[6,1],[7,1],[8,1],[9,1]]).
+ * example: occurrences([1,2,4,6,7,8,9,1],[[1,2],[2,1],[4,1],[6,1],[7,1],[8,1],[9,1]]).
  * TODO: maybe there is a faster way?
  * */
 occurrences(L,LO):-
@@ -621,7 +626,7 @@ count_occ([H|T],L,[[H,Occ]|T1]):-
 /**
  * occurrences(+Number:number,+List:numbers,-Occ:list)
  * Occ is the occurrences of Number in List
- * test: occurrences([1,2,4,6,7,8,9,1],1,2).
+ * example: occurrences([1,2,4,6,7,8,9,1],1,2).
  * */
 occurrences([],_,0).
 occurrences(L,E,0):- ground(E), \+member(E,L).
@@ -632,7 +637,7 @@ occurrences(L,E,N):-
 /**
  * min_val(+List:numbers,-Min:number)
  * Min is the minimum of the list, wrapper for min_list/2
- * test: min_val([1,2,4,6,7,8,9,1],1).
+ * example: min_val([1,2,4,6,7,8,9,1],1).
  * */
 min_val(L,M):-
     min_list(L,M).
@@ -640,7 +645,7 @@ min_val(L,M):-
 /**
  * max_val(+List:numbers,-Max:number)
  * Max is the minimum of the list, wrapper for max_list/2
- * test: max_val([1,2,4,6,7,8,9,1],9).
+ * example: max_val([1,2,4,6,7,8,9,1],9).
  * */
 max_val(L,M):-
     max_list(L,M).
@@ -648,7 +653,7 @@ max_val(L,M):-
 /**
  * sum(+List:numbers,-Sum:number)
  * Sum is the sum of the elements in List, wrapper for sum_list/2
- * test: sum([1,24,2,3,-1],29). 
+ * example: sum([1,24,2,3,-1],29). 
  * */
 sum(L,S):-
     sum_list(L,S).
@@ -656,7 +661,7 @@ sum(L,S):-
 /**
  * prod(+List:numbers,-Prod:number)
  * Prod is the product of the elements in List
- * test: prod([1,24,2,3,-1],-144). 
+ * example: prod([1,24,2,3,-1],-144). 
  * */
 prod([],0).
 prod(L,P):-
@@ -669,6 +674,117 @@ prod([H|T],P0,P1):-
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
+
+/**
+ * normalize_prob(+List:numbers,-NormalizedList:number)
+ * NormalizedList is the list List normalized.
+ * List must contain only elements between 0 and 1 (included)
+ * Formula: i / list_sum foreach i in List
+ * example: normalize_prob([0.07,0.14,0.07],[0.25,0.5,0.25])
+ * */
+div(Sum,El,Div):-
+    Sum \= 0,
+    Div is El / Sum.
+
+between_float(L,U,N):-
+    N >= L,
+    N =< U.
+
+normalize_prob([],[]):- !.
+normalize_prob(L,LNorm):-
+    maplist(between_float(0,1),L),
+    sum_list(L,SL),
+    maplist(div(SL),L,LNorm).
+
+/**
+ * https://en.wikipedia.org/wiki/Feature_scaling#Rescaling_(min-max_normalization)
+ * TODO: all
+ * */
+
+/**
+ * delete_nth(+List:numbers,+Index:numbers,-LDeleted:number)
+ * LDeleted is List with the element at pos Index removed, counting from 1
+ * If Index is greater than the length of the list, fails
+ * example: delete_nth([1,2,7,4],3,[1,2,4])
+ * TODO: multidimensional data: delete_nth([[1,2,7,4],[1,2,7,4]],3,[[1,2,4],[1,2,4]])
+ * */
+delete_nth([_|T],1,T):- !.
+delete_nth([H|T],Nth,[H|T1]):-
+    Nth > 1,
+	N is Nth-1,
+    delete_nth(T,N,T1).
+
+/**
+ * sample(+List:elements,+Size:number,-Result:list)
+ * sample(+List:elements,+Size:number,+Replace:bool,-Result:list)
+ * sample(+List:elements,+Size:number,+Replace:bool,+Probabilities:list,-Result:list)
+ * Takes a sample of size Size from list List.
+ * Replace can be true or false, if not provided is false
+ * Probabilities is a list of probabilities.
+ * If Replace is false and a list of probabilities is specified, the list is
+ * normalized, after the removal of the element 
+ * example:
+ * TODO: test and examples
+ * */
+sample_list(_,0,[],_):- !.
+sample_list(L,N,[H|T],Replace):-
+    length(L,Len),
+    random_between(1,Len,R),
+    nth1(R,L,H),
+    ( Replace = true ->
+        L1 = L ;
+        delete_nth(L,R,L1)
+    ),
+    N1 is N - 1,
+    sample_list(L1,N1,T,Replace).
+
+get_random_el([H|_],P,I,I,H):-
+    P =< 0, !.
+get_random_el([_|T],P,I,I0,[CP|TP],El):-
+    P > 0,
+    P1 is P - CP,
+    I1 is I + 1,
+    get_random_el(T,P1,I1,I0,TP,El).
+
+
+sample_list_prob(_,0,_,_,[]).
+sample_list_prob(L,Size,Replace,[HP|TP],[Out|TOut]):-
+    random(R),
+    RP is R - HP,
+    get_random_el(L,RP,1,Index,[HP|TP],Out),
+    ( Replace = true ->
+        L1 = L,
+        PL = [HP|TP] ;
+        delete_nth(L,Index,L1),
+        delete_nth([Out|TOut],Index,PTemp),
+        normalize_prob(PTemp,PL)
+    ),
+    S1 is Size - 1,
+    sample_list_prob(L1,S1,Replace,PL,TOut).
+
+
+sample(List,Size,_):-
+    length(List,N),
+    Size > N,
+    writeln("Sample size must be smaller or equal to the possible elements. Set Replace to true if you want to sample with replacement."), !,
+    false.
+sample(List,Size,Result):-
+    sample_list(List,Size,false,Result).
+sample(List,Size,Replace,Result):-
+    ( ( Replace = true ; Replace = false ) ->
+        sample_list(List,Size,Result,true) ;
+        writeln("Set Replace to true or false"),
+        false
+    ).
+sample(List,Size,Replace,Probabilities,Result):-
+    ( ( Replace \= true , Replace \= false ) ->
+        writeln("Set Replace to true or false"),
+        false ;
+        \+ sum_list(Probabilities,1) ->
+            writeln("Probabilities must sum to 1"),
+            false ;
+            sample_list_prob(List,Size,Replace,Probabilities,Result)
+    ).
 
 /**
  * seq(A:number,B:number,Seq:List).
@@ -721,3 +837,4 @@ choose(N,K,C):-
 % random variables 
 % expected_value_var(Val,Occ,Exp)
 % variance_var(Val,Occ,Exp)
+

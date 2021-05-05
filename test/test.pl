@@ -37,6 +37,9 @@ test_list([
     max_val,
     sum,
     prod,
+    delete_nth,
+    normalize_prob,
+    sample,
     seq,
     choose,
     factorial
@@ -166,7 +169,7 @@ test(rank_3):- rank([0,2,3,2],min,[1,2,4,2]).
 test(rank_4):- rank([0,2,3,2],max,[1,3,4,3]).
 test(rank_5):- rank([0,2,3,2],dense,[1,2,3,2]).
 test(rank_6):- rank([0,2,3,2],ordinal,[1,2,4,3]).
-test(rank_7):- rank([[0,2,3,2],[1,4,5]],max,[[1, 4, 5, 4], [2, 6, 7]]).
+test(rank_7):- rank([[0,2,3,2],[1,4,5]],max,[[1,4,5,4],[2,6,7]]).
 :- end_tests(rank).
 
 % other utils
@@ -211,6 +214,25 @@ test(sum_1):- sum([1,24,2,3,-1],29).
 test(prod_1):- prod([1,24,2,3,-1],-144).
 test(prod_2):- prod([1,24,0,3,-1],0).
 :- end_tests(prod).
+
+:- begin_tests(delete_nth, []).
+test(delete_nth_1):- delete_nth([1,2,7,4],3,[1,2,4]).
+test(delete_nth_2):- \+ delete_nth([1,2,7,4],-3,_).
+test(delete_nth_3):- delete_nth([1,2,4,7,8,9],4,[1,2,4,8,9]).
+test(delete_nth_4):- \+ delete_nth([1,2,4,7,8,9],7,_).
+:- end_tests(delete_nth).
+
+:- begin_tests(normalize_prob, []).
+test(normalize_prob_1):- normalize_prob([0.07,0.14,0.07],L), LC = [0.25,0.5,0.25], maplist(close_to,L,LC).
+test(normalize_prob_2):- \+ normalize_prob([-0,1.14,0.07],_).
+test(normalize_prob_3):- \+ normalize_prob([0.3,-0.14,0.07],_).
+:- end_tests(normalize_prob).
+
+:- begin_tests(sample, []).
+test(sample_1):- LIn = [1,2,3,4,5], sample(LIn,5,L), sort(L,LIn).
+test(sample_2):- LIn = [1,2,3,4,5], \+ sample(LIn,6,_).
+% test(sample_3):- LIn = [1,2,3,4,5], sample(LIn,6,L).
+:- end_tests(sample).
 
 :- begin_tests(seq, []).
 test(seq_1):- seq(1,10,1,[1,2,3,4,5,6,7,8,9,10]).
