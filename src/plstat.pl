@@ -24,6 +24,8 @@
     prod/2,
     min_val/2, % wrapper for min_list
     max_val/2, % wrapper for max_list
+    rank/2,
+    rank/3,
     nth_row/3,
     nth_column/3,
     swap_rows_columns/2,
@@ -429,6 +431,119 @@ kurtosis_(List,Kurtosis):-
     pow(L2,2,L22),
     Kurtosis is L4 / L22.
 
+/**
+ * rank(+List:numbers,-RankList:number)
+ * rank(+List:numbers,+Method:atom,-RankList:number)
+ * RankList is the rank of the list List according to method Method
+ * If Method is not supplied, by default it performs 
+ * average/fractional ranking
+ * Method must be one of the following:
+ * - average or fractional: items that compare equal receive the same rank,
+ *   which is the mean of ordinal ranking values (see below)
+ * - min or competition: items that compare equal receive the same rank
+ *   (there will be a gap in the ranking list)
+ * - max or modified_competition: as min, but the gap is left before, rather than after 
+ * - dense: as min, but no gaps are left
+ * - ordinal: all the elements receive a different rank. If the same element
+ *   appears more than one time, all the occurrences will have a different
+ *   (increasing) rank
+ * example: rank([0,2,3,2],[1.0,2.5,4.0,2.5]).
+ * example: rank([0,2,3,2],average,[1.0,2.5,4.0,2.5]).
+ * example: rank([0,2,3,2],min,[1,2,4,2]).
+ * example: rank([0,2,3,2],max,[1,3,4,3]).
+ * example: rank([0,2,3,2],dense,[1,2,3,2]).
+ * example: rank([0,2,3,2],ordinal,[1,2,4,3]).
+ * TODO: allow also multidimensional data: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.rankdata.html#scipy.stats.rankdata
+ * */
+rank(L,Rank):-
+    rank(L,average,Rank).
+rank(LL,Mode,Rank):-
+    flatten(LL,L),
+    msort(L,LS),
+    (   Mode = dense ->    
+    	compute_dense(LS,LS,1,LR);
+    	(Mode = min ; Mode = competition) ->
+    	compute_min(LS,LS,1,LR);
+    	(Mode = max ; Mode = modified_competition) ->  
+    	compute_max(LS,LS,1,LR);
+    	(Mode = average ; Mode = fractional) -> 
+     	compute_average(LS,1,LR) ;
+    	Mode = ordinal ->  
+    	compute_ordinal(LS,1,LR)
+    ),
+    extract_map(LL,LR,Rank,Mode).
+
+extract_map([],_LR,[],_):- !.
+extract_map([H|T],LR,[HM|TM],Mode):-
+    extract_map_(H,LR,HM,Mode), !,
+	extract_map(T,LR,TM,Mode).    
+extract_map([H|T],LR,[V|TV],M):-
+    extract_map_([H|T],LR,[V|TV],M).
+
+extract_map_([],_,[],_).
+extract_map_([H|T],LR,[V|TV],M):-
+    memberchk([H,V],LR),
+    ( M = ordinal -> 
+    	delete(LR,[H,V],LR1);
+    	LR1 = LR
+    ),
+    extract_map_(T,LR1,TV,M).
+
+compute_ordinal([],_,[]).
+compute_ordinal([H|T],I,[[H,I]|T3]):-
+    I1 is I+1,
+    compute_ordinal(T,I1,T3).
+
+% dense
+compute_dense([],_,_,[]).
+compute_dense([H|_],L,IN,[[H,IN]|TR]):-
+    findall(I,nth0(I,L,H),LI),
+    length(LI,N),
+    length(LAux,N),
+    append(LAux,LN,L),
+    I1 is IN+1,
+    compute_dense(LN,LN,I1,TR).
+
+% min
+compute_min([],_,_,[]).
+compute_min([H|_],L,IN,[[H,IN]|TR]):-
+    findall(I,nth0(I,L,H),LI),
+    length(LI,N),
+    length(LAux,N),
+    append(LAux,LN,L),
+    I1 is IN+N,
+    compute_min(LN,LN,I1,TR).
+
+% max
+compute_max([],_,_,[]).
+compute_max([H|_],L,IN,[[H,IT]|TR]):-
+    findall(I,nth0(I,L,H),LI),
+    length(LI,N),
+    length(LAux,N),
+    append(LAux,LN,L),
+    I1 is IN+N,
+    IT is I1 - 1,
+    compute_max(LN,LN,I1,TR).
+
+
+look_in_average([],[]).
+look_in_average([[V,Rank]|T],[[V,Rank1]|T0]):-
+    findall(R,member([V,R],T),LR),
+    length(LR,NR),
+    ( NR is 0 ->  
+    	Rank1 = Rank,
+        T1 = T;
+    	sum_list(LR,S),
+        Rank1 is (S+Rank) / (NR+1),
+        delete(T,[V,_],T1)
+    ),
+    look_in_average(T1,T0).
+
+% average
+compute_average(LS,I,LAvg):-
+    compute_ordinal(LS,I,LAvg1),
+    look_in_average(LAvg1,LAvg).
+
 %%%%%%%
 % random variables
 %%%%%%%
@@ -459,13 +574,6 @@ nth_column(L,Nth,NthColumn):-
  * LColumns is LRows transposed (rows and columns swapped)
  * example: swap_rows_columns([[1,2,4],[3,6,7]],[[1,3],[2,6],[4,7]]).
  * */
-swap_rows_columns([],[]).
-swap_rows_columns(L1,L2):-
-    length(L1,N1),
-    length(L2,N2),
-    N1 \= N2,
-    writeln("Lists must be of the same length"),
-    false.
 swap_rows_columns([H|T],MT):-
     transpose(H,[H|T],MT).
 transpose([],_,[]).
@@ -563,10 +671,14 @@ prod([H|T],P0,P1):-
 %%%%%%%%%%%%%%%%%%%%%%%%
 
 /**
- * seq(A:number,B:number,Step:number,Seq:List). 
+ * seq(A:number,B:number,Seq:List).
+ * seq(A:number,B:number,Step:number,Seq:List).
  * List is a list with a sequence ranging from A to B with step Step
+ * If step is not provided, 0 is assumed
  * test: seq(1,10,1,[1,2,3,4,5,6,7,8,9,10])
 */
+seq(A,B,L):-
+    seq(A,B,1,L).
 seq(A,A,1,[A]):- !.
 seq(A,A,V,[]):- V \= 1.
 seq(_,_,0,[]).
