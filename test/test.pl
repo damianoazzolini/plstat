@@ -26,6 +26,7 @@ test_list([
     moment,
     skew,
     kurtosis,
+    rank,
     nth_row,
     nth_column,
     occurrences_2,
@@ -157,6 +158,16 @@ test(skew_3):- skew([2,4,7,3,2],V),close_to(V,0.9704949).
 test(kurtosis_1):- kurtosis([26,12,16,56,112,24],K),close_to(K,3.05052136).
 test(kurtosis_2):- kurtosis([3,5,7,2,7],K),close_to(K,1.37315088757).
 :- end_tests(kurtosis).
+
+:- begin_tests(rank, []).
+test(rank_1):- rank([0,2,3,2],[1,2.5,4,2.5]).
+test(rank_2):- rank([0,2,3,2],average,[1,2.5,4,2.5]).
+test(rank_3):- rank([0,2,3,2],min,[1,2,4,2]).
+test(rank_4):- rank([0,2,3,2],max,[1,3,4,3]).
+test(rank_5):- rank([0,2,3,2],dense,[1,2,3,2]).
+test(rank_6):- rank([0,2,3,2],ordinal,[1,2,4,3]).
+test(rank_7):- rank([[0,2,3,2],[1,4,5]],max,[[1, 4, 5, 4], [2, 6, 7]]).
+:- end_tests(rank).
 
 % other utils
 
