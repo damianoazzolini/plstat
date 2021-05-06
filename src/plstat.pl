@@ -723,11 +723,14 @@ delete_nth([H|T],Nth,[H|T1]):-
  * Probabilities is a list of probabilities.
  * If Replace is false and a list of probabilities is specified, the list is
  * normalized, after the removal of the element 
- * example:
- * TODO: test and examples
+ * example: sample([1,2,3,4,5],5,L).
+ * example: sample([1,2,3,4,5],5,true,L).
+ * example: sample([1,2,3,4,5],5,false,L).
+ * example: sample([1,2,3,4,5],5,true,[0.1,0.1,0.1,0.1,0.6],L).
+ * example: sample([1,2,3,4,5],5,false,[0.1,0.1,0.1,0.1,0.6],L).
  * */
-sample_list(_,0,[],_):- !.
-sample_list(L,N,[H|T],Replace):-
+sample_list(_,0,_,[]):- !.
+sample_list(L,N,Replace,[H|T]):-
     length(L,Len),
     random_between(1,Len,R),
     nth1(R,L,H),
@@ -736,9 +739,10 @@ sample_list(L,N,[H|T],Replace):-
         delete_nth(L,R,L1)
     ),
     N1 is N - 1,
-    sample_list(L1,N1,T,Replace).
+    sample_list(L1,N1,Replace,T).
 
-get_random_el([H|_],P,I,I,H):-
+get_random_el([H],_,_,_,_,H):- !.
+get_random_el([H|_],P,I,I,_,H):-
     P =< 0, !.
 get_random_el([_|T],P,I,I0,[CP|TP],El):-
     P > 0,
@@ -746,9 +750,9 @@ get_random_el([_|T],P,I,I0,[CP|TP],El):-
     I1 is I + 1,
     get_random_el(T,P1,I1,I0,TP,El).
 
-
-sample_list_prob(_,0,_,_,[]).
+sample_list_prob(_,0,_,_,[]):- !.
 sample_list_prob(L,Size,Replace,[HP|TP],[Out|TOut]):-
+    Size > 0,
     random(R),
     RP is R - HP,
     get_random_el(L,RP,1,Index,[HP|TP],Out),
@@ -756,12 +760,11 @@ sample_list_prob(L,Size,Replace,[HP|TP],[Out|TOut]):-
         L1 = L,
         PL = [HP|TP] ;
         delete_nth(L,Index,L1),
-        delete_nth([Out|TOut],Index,PTemp),
+        delete_nth([HP|TP],Index,PTemp),
         normalize_prob(PTemp,PL)
     ),
     S1 is Size - 1,
     sample_list_prob(L1,S1,Replace,PL,TOut).
-
 
 sample(List,Size,_):-
     length(List,N),
@@ -772,7 +775,7 @@ sample(List,Size,Result):-
     sample_list(List,Size,false,Result).
 sample(List,Size,Replace,Result):-
     ( ( Replace = true ; Replace = false ) ->
-        sample_list(List,Size,Result,true) ;
+        sample_list(List,Size,true,Result) ;
         writeln("Set Replace to true or false"),
         false
     ).
@@ -780,11 +783,20 @@ sample(List,Size,Replace,Probabilities,Result):-
     ( ( Replace \= true , Replace \= false ) ->
         writeln("Set Replace to true or false"),
         false ;
-        \+ sum_list(Probabilities,1) ->
+        \+ sum_list(Probabilities,1.0) ->
             writeln("Probabilities must sum to 1"),
+            false ;
+            length(List,NL), length(Probabilities,NP),
+            NP \= NL ->
+            writeln("The list with the probabilities must be of the same length of the list with the elements to sample"),
             false ;
             sample_list_prob(List,Size,Replace,Probabilities,Result)
     ).
+
+/**
+ * sample_distribution()
+ * Sample from the specified distribution
+ * */
 
 /**
  * seq(A:number,B:number,Seq:List).
@@ -838,3 +850,4 @@ choose(N,K,C):-
 % expected_value_var(Val,Occ,Exp)
 % variance_var(Val,Occ,Exp)
 
+% TODO: set verbose/0 with assert to test also failures without printing

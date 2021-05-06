@@ -230,8 +230,7 @@ test(normalize_prob_3):- \+ normalize_prob([0.3,-0.14,0.07],_).
 
 :- begin_tests(sample, []).
 test(sample_1):- LIn = [1,2,3,4,5], sample(LIn,5,L), sort(L,LIn).
-test(sample_2):- LIn = [1,2,3,4,5], \+ sample(LIn,6,_).
-% test(sample_3):- LIn = [1,2,3,4,5], sample(LIn,6,L).
+test(sample_2):- LIn = [1,2,3,4,5], sample(LIn,5,true,L), sort(L,LIn).
 :- end_tests(sample).
 
 :- begin_tests(seq, []).
