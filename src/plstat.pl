@@ -708,11 +708,17 @@ normalize_prob(L,LNorm):-
  * example: delete_nth([1,2,7,4],3,[1,2,4])
  * TODO: multidimensional data: delete_nth([[1,2,7,4],[1,2,7,4]],3,[[1,2,4],[1,2,4]])
  * */
-delete_nth([_|T],1,T):- !.
-delete_nth([H|T],Nth,[H|T1]):-
+delete_nth(L,N,LDeleted):-
+    L = [A|_],
+    (is_list(A) ->
+        maplist(delete_nth_(N),L,LDeleted) ;
+        delete_nth_(N,L,LDeleted)
+    ).
+delete_nth_(1,[_|T],T):- !.
+delete_nth_(Nth,[H|T],[H|T1]):-
     Nth > 1,
 	N is Nth-1,
-    delete_nth(T,N,T1).
+    delete_nth_(N,T,T1).
 
 /**
  * sample(+List:elements,+Size:number,-Result:list)
@@ -775,7 +781,7 @@ sample(List,Size,Result):-
     sample_list(List,Size,false,Result).
 sample(List,Size,Replace,Result):-
     ( ( Replace = true ; Replace = false ) ->
-        sample_list(List,Size,true,Result) ;
+        sample_list(List,Size,Replace,Result) ;
         writeln("Set Replace to true or false"),
         false
     ).

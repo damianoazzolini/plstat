@@ -220,6 +220,8 @@ test(delete_nth_1):- delete_nth([1,2,7,4],3,[1,2,4]).
 test(delete_nth_2):- \+ delete_nth([1,2,7,4],-3,_).
 test(delete_nth_3):- delete_nth([1,2,4,7,8,9],4,[1,2,4,8,9]).
 test(delete_nth_4):- \+ delete_nth([1,2,4,7,8,9],7,_).
+test(delete_nth_5):- delete_nth([[1,2,7,4],[1,2,7]],3,[[1,2,4],[1,2]]).
+test(delete_nth_6):- \+delete_nth([[1,2,7,4],[2,7]],3,_).
 :- end_tests(delete_nth).
 
 :- begin_tests(normalize_prob, []).
@@ -230,7 +232,7 @@ test(normalize_prob_3):- \+ normalize_prob([0.3,-0.14,0.07],_).
 
 :- begin_tests(sample, []).
 test(sample_1):- LIn = [1,2,3,4,5], sample(LIn,5,L), sort(L,LIn).
-test(sample_2):- LIn = [1,2,3,4,5], sample(LIn,5,true,L), sort(L,LIn).
+test(sample_2):- LIn = [1,2,3,4,5], sample(LIn,5,false,L), sort(L,LIn).
 :- end_tests(sample).
 
 :- begin_tests(seq, []).
