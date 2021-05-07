@@ -26,6 +26,9 @@ test_list([
     moment,
     skew,
     kurtosis,
+    rescale,
+    mean_normalize,
+    standardize,
     rank,
     nth_row,
     nth_column,
@@ -200,20 +203,38 @@ test(occurrences_1):- occurrences([1,2,4,6,7,8,9,1],[[1,2],[2,1],[4,1],[6,1],[7,
 
 :- begin_tests(min_val, []).
 test(min_1):- min_val([1,2,4,6,7,8,9,1],1).
+test(min_2):- min_val([[1,2,4,6,7,8,9,1],[1,2,4,6,7,8,9,1]],[1,1]).
 :- end_tests(min_val).
 
 :- begin_tests(max_val, []).
 test(max_1):- max_val([1,2,4,6,7,8,9,1],9).
+test(max_2):- max_val([[1,2,4,6,7,8,9,1],[1,2,4,6,7,8,9,1]],[9,9]).
 :- end_tests(max_val).
 
 :- begin_tests(sum, []).
 test(sum_1):- sum([1,24,2,3,-1],29).
+test(sum_2):- sum([[1,24,2,3,-1],[1,24,2,3,-1]],[29,29]).
 :- end_tests(sum).
 
 :- begin_tests(prod, []).
 test(prod_1):- prod([1,24,2,3,-1],-144).
 test(prod_2):- prod([1,24,0,3,-1],0).
+test(prod_3):- prod([[1,24,0,3,-1],[8,8]],[0,64]).
 :- end_tests(prod).
+
+:- begin_tests(rescale, []).
+test(rescale_1):- rescale([0.07,0.14,0.07],[0.0,1.0,0.0]).
+test(rescale_2):- rescale([0.07,0.14,0.07],2,3,[2.0,3.0,2.0]).
+:- end_tests(rescale).
+
+:- begin_tests(mean_normalize, []).
+test(mean_normalize_1):- mean_normalize([1,2,4],L), LRes = [-0.444, -0.1111, 0.5555], maplist(close_to,L,LRes).
+:- end_tests(mean_normalize).
+
+:- begin_tests(standardize, []).
+test(standardize_1):- standardize([[1,2,4],[1,2,4]],[L,L]), LRes = [-1.06904,-0.2672612,1.336306],  maplist(close_to,L,LRes).
+:- end_tests(standardize).
+
 
 :- begin_tests(delete_nth, []).
 test(delete_nth_1):- delete_nth([1,2,7,4],3,[1,2,4]).

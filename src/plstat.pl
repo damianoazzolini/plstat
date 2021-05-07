@@ -1,4 +1,10 @@
 :- module(plstat,[
+    help/0, % defined in utils.pl
+    help/1, % defined in utils.pl
+    % help/2, % defined in utils.pl
+    bug/0,
+    list/0,
+    suggestion/0,
     mean/2,
     median/2,
     mode/2,
@@ -22,8 +28,13 @@
     moment/3,
     sum/2, % wrapper for sum_list
     prod/2,
+    rescale/2,
+    rescale/4,
+    mean_normalize/2,
+    standardize/2,
     min_val/2, % wrapper for min_list
     max_val/2, % wrapper for max_list
+    min_max_val/3,
     rank/2,
     rank/3,
     nth_row/3,
@@ -39,11 +50,12 @@
     sample/5,
     seq/4,
     factorial/2,
-    choose/3
+    choose/3,
+    random_list/4 % to uncomment when random vars are implemented
     ]).
 
-% list all the available predicates
-list:- true. 
+:- [utils].
+% :- [random_vars].
 
 % multidimensional wrapper
 multidim2(Predicate,List,Res):-
@@ -56,9 +68,11 @@ multidim2(Predicate,List,Res):-
 /**
  * mean(-List:number,+Mean:float)
  * Mean is the mean of the list List
- * List can also be a list of lists
- * example: mean([1,2,3],2).
- * example: mean([[1,3,4],[7,67]],[2.6666666666666665, 37]).
+ * List can also be multidimensional (list of lists)
+ * Example: mean([1,2,3],M).
+ * Expected: M = 2.
+ * Example: mean([[1,3,4],[7,67]],L).
+ * Expected: [2.666,37]
 */
 mean([],0):- !.
 mean([E],E):- number(E), !.
@@ -72,7 +86,7 @@ mean_(L,Mean):-
 /**
  * median(-List:number,+Median:number)
  * Median is the median of the list List
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * example: median([1,2,3],2).
  * example: median([[1,5,64],[27,67]],[5, 47]).
 */
@@ -96,7 +110,7 @@ median_(L,Median):-
 /**
  * mode(-List:number,+Mode:list)
  * Mode is the mode of the list List
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * example: mode([1,2,3,1],[1]).
  * example: mode([[1,5,64],[27,67]],[[1,5,64], [27,67]])
 */
@@ -147,7 +161,7 @@ mode_(L,Mode):-
 /**
  * rms(+List:number,RMS:number)
  * RMS is the root mean square of the list List
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * Square root of the sum of the squared data values divided by the number of values
  * example: rms([1,5,8,3],4.97493).
  * */
@@ -165,7 +179,7 @@ rms_(L,RMS):-
 /**
  * sum_of_squares(+List:number,-SumOfSquares:number)
  * SumOfSquares is the sum of squares of the list List
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * compute \sum_n (x - \mu)^2
  * example: sum_of_squares([1,2,3],2)
  * */
@@ -184,7 +198,7 @@ sum_of_squares_(L,SumSquared):-
 /**
  * variance(+List:number,-Variance:number)
  * Variance is the sample variance of the list List
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * (1/(N - 1)) * \sum_n (x_i - \mu)^2
  * example: variance([1,2,4,6,7,8,9],9.2380952)
  * */
@@ -201,7 +215,7 @@ variance_(L,Var):-
 /**
  * pop_variance(+List:number,-Variance:number)
  * Variance is the population variance of the list List
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * (1/N) * \sum_n (x_i - \mu)^2
  * pop_variance([1,4,6,72,1],765.3600).
  * */
@@ -216,7 +230,7 @@ pop_variance_(L,Var):-
 
 /* std_dev(+List:numbers,-StdDev:number)
  * StdDev is the standard deviation (square root of the sample variance)
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * example: std_dev([1,2,4,6,7,8,9],3.039424)
  * */
 std_dev(L,StdDev):-
@@ -227,7 +241,7 @@ std_dev_(L,StdDev):-
 
 /* pop_std_dev(+List:numbers,-StdDev:number)
  * StdDev is the standard deviation (square root of the population variance)
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * example: pop_std_dev([1,2,4,6,7,8,9],3.039424)
  * */
 pop_std_dev(L,StdDev):-
@@ -240,7 +254,7 @@ pop_std_dev_(L,StdDev):-
  * range(+List:numbers,-Range:number)
  * Range is the difference between the biggest and the smallest
  * element of the list List
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * example: range([1,2,4,6,7,8,9],8).
  * */
 range([],0):- !.
@@ -255,7 +269,7 @@ range_(L,Range):-
 /**
  * midrange(+List:numbers,-Midrange:number)
  * Midrange is (Max - Min) / 2
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * example: midrange([1,2,4,6,7,8,9],4).
  * */
 midrange(L,Range):-
@@ -268,7 +282,7 @@ midrange_(L,Midrange):-
  * mean_absolute_deviation(+List:numbers,-MAS:number)
  * MAD is the sum of the absolute value of the differences between data values and the mean, divided by the sample size.
  * MAD = 1/N * \sum_i |x - \mu|
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * example: mean_absolute_deviation([1,2,4,6,7,8,9],2.5306122).
  * */
 diff_abs(A,B,D):-
@@ -350,7 +364,7 @@ weighted_mean(List,Weights,WM):-
 /**
  * harmonic_mean(+List:numbers,-HM:number)
  * HM is the harmonic mean:  n / (1/x1 + 1/x2 + ... + 1/xn)
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * example: harmonic_mean([1,2,3,4,5,6,7],2.69972).
  * */
 rec(0,_):- writeln('Cannot divide by 0'), false.
@@ -407,7 +421,7 @@ moment(L,M,Moment):-
  * skew(+List:numbers,-Skew:number)
  * Skew is the sample skewness of List
  * Skew = m_3 / (m_2)^(3/2)
- * List can also be a list of lists
+ * List can also be multidimensional (list of lists)
  * example: skew([2,8,0,4,1,9,9,0],0.26505541)
  * TODO: consider also the version with bias false
  * */
@@ -424,8 +438,9 @@ skew_(List,Skew):-
  * kurtosis(+List:numbers,-Kurtosis:number)
  * Kurtosis is the fourth central moment divided by 
  * the square of the variance.
- * List can also be a list of lists
- * example: kurtosis([3,5,7,2,7],1.3731508875)
+ * List can also be multidimensional (list of lists).
+ * Example: kurtosis([3,5,7,2,7],K).
+ * Expected: K = 1.3731508875.
  * */
 kurtosis([],0).
 kurtosis(L,Kurtosis):-
@@ -637,40 +652,61 @@ occurrences(L,E,N):-
 /**
  * min_val(+List:numbers,-Min:number)
  * Min is the minimum of the list, wrapper for min_list/2
- * example: min_val([1,2,4,6,7,8,9,1],1).
+ * List can also be multidimensional (list of lists)
+ * example: min_val([1,2,4,6,7,8,9,1],M).
+ * expected: M = 1.
  * */
 min_val(L,M):-
-    min_list(L,M).
+    multidim2(min_list,L,M).
 
 /**
  * max_val(+List:numbers,-Max:number)
  * Max is the minimum of the list, wrapper for max_list/2
- * example: max_val([1,2,4,6,7,8,9,1],9).
+ * List can also be multidimensional (list of lists)
+ * Example: max_val([1,2,4,6,7,8,9,1],9).
+ * Expected: M = 9.
  * */
 max_val(L,M):-
-    max_list(L,M).
+    multidim2(max_list,L,M).
+
+/**
+ * min_max_val(+List:numbers,-Min:number,-Max:number)
+ * Min and Max are the minimum and the maximum of the list List respectively
+ * example: min_max_val([1,2,4,6,7,8,9,1],Min,Max).
+ * expected: Min = 1, Max = 9.
+ * */
+min_max_val(L,Min,Max):-
+    max_list(L,Min),
+    max_list(L,Max).
 
 /**
  * sum(+List:numbers,-Sum:number)
  * Sum is the sum of the elements in List, wrapper for sum_list/2
- * example: sum([1,24,2,3,-1],29). 
+ * List can also be multidimensional (list of lists).
+ * example: sum([1,24,2,3,-1],S).
+ * expected: S = 29. 
  * */
 sum(L,S):-
-    sum_list(L,S).
+    multidim2(sum_list,L,S).
 
 /**
  * prod(+List:numbers,-Prod:number)
  * Prod is the product of the elements in List
- * example: prod([1,24,2,3,-1],-144). 
+ * List can also be multidimensional (list of lists)
+ * example: prod([1,24,2,3,-1],P).
+ * expected: P = -144
  * */
 prod([],0).
 prod(L,P):-
-    prod(L,1,P).
-prod([],N,N).
-prod([0|_],_,0):- !.
-prod([H|T],P0,P1):-
+    ( L = [A|_], is_list(A) -> 
+        maplist(prod(1),L,P);
+        prod(1,L,P)
+    ).
+prod(N,[],N):- !.
+prod(_,[0|_],0):- !.
+prod(P0,[H|T],P1):-
     PT is P0 * H,
-    prod(T,PT,P1).
+    prod(PT,T,P1).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -679,8 +715,10 @@ prod([H|T],P0,P1):-
  * normalize_prob(+List:numbers,-NormalizedList:number)
  * NormalizedList is the list List normalized.
  * List must contain only elements between 0 and 1 (included)
+ * List can also be multidimensional (list of lists)
  * Formula: i / list_sum foreach i in List
- * example: normalize_prob([0.07,0.14,0.07],[0.25,0.5,0.25])
+ * Example: normalize_prob([0.07,0.14,0.07],L).
+ * Expected: L = [0.25,0.5,0.25].
  * */
 div(Sum,El,Div):-
     Sum \= 0,
@@ -692,21 +730,104 @@ between_float(L,U,N):-
 
 normalize_prob([],[]):- !.
 normalize_prob(L,LNorm):-
+    multidim2(normalize_prob_,L,LNorm).
+normalize_prob_(L,LNorm):-
     maplist(between_float(0,1),L),
     sum_list(L,SL),
     maplist(div(SL),L,LNorm).
 
 /**
- * https://en.wikipedia.org/wiki/Feature_scaling#Rescaling_(min-max_normalization)
- * TODO: all
+ * rescale(+List:numbers,-Rescaled:numbers)
+ * rescale(+List:numbers,+Lower:number,+Upper:number,-Rescaled:number)
+ * Rescaled is list List rescaled in the range [Lower,Upper]
+ * Also known as min-max normalization
+ * List can also be multidimensional (list of lists)
+ * If Lower and Upper are not provided, they are set by default to 0 and 1
+ * Every x is rescaled as Lower + ((x - min_list)*(Upper - Lower)) / (max_list - min_list)
+ * Example: rescale([0.07,0.14,0.07],L).
+ * Example: rescale([0.07,0.14,0.07],2,3,L).
+ * */
+rescale([],[]).
+rescale(L,LResc):-
+    rescale(L,0,1,LResc).
+rescale(L,Lower,Upper,LResc):-
+    ( Lower >= Upper ->
+        writeln("Upper bound should be greater than lower bound");
+        true
+    ),
+    ( L = [A|_], is_list(A) -> 
+        maplist(rescaling_(Lower,Upper),L,LResc);
+        rescaling_(Lower,Upper,L,LResc)
+    ).
+rescaling_(Lower,Upper,L,LR):-
+    min_val(L,Min),
+    max_val(L,Max),
+    (Min = Max ->
+        writeln("Min = Max, cannot divide by 0"),
+        false;
+        maplist(rescaling(Min,Max,Lower,Upper),L,LR)
+    ).
+
+rescaling(Min,Max,Lower,Upper,V,VResc):-
+    VResc is Lower + ((V - Min)*(Upper - Lower))/(Max - Min).
+
+/**
+ * mean_normalize(+List:numbers,-Normalized:numbers)
+ * Normalized is list List mean normalized
+ * List can also be multidimensional (list of lists)
+ * Formula: (x - mean_list) / (Upper - Lower) foreach x in List
+ * Example: mean_normalize([1,2,4],L).
+ * Expected: L = [-0.444, -0.111, 0.555]. 
+ * */
+mean_normalize([],[]).
+mean_normalize(List,Normalized):-
+    multidim2(mean_normalize_,List,Normalized).
+mean_normalize_(List,Normalized):-
+    min_val(List,Min),
+    max_val(List,Max),
+    mean(List,Mean),
+    (Min = Max ->
+        writeln("Min = Max, cannot divide by 0"),
+        false;
+        maplist(mean_normalizing(Min,Max,Mean),List,Normalized)
+    ).
+mean_normalizing(Min,Max,Mean,X,Normalized):-
+    Normalized is (X - Mean) / (Max - Min).
+
+/**
+ * standardize(+List:numbers,-Standardized:numbers)
+ * Standardized is list List standardized
+ * Formula: (x - mean_list) / std_dev_list foreach x in List
+ * List can also be multidimensional (list of lists)
+ * Population std_dev is considered (divided by n)
+ * Example: standardize([1,2,4],L).
+ * Expected: L = [-1.0690449,-0.2672612,1.336306]. 
+ * */
+standardize(List,Standardized):-
+    multidim2(standardize_,List,Standardized).
+standardize_(List,Standardized):-
+    mean(List,Mean),
+    pop_std_dev(List,SD),
+    (SD = 0 -> 
+        writeln("Cannot standardize, standard deviation in 0"),
+        false;
+        maplist(standardizing(Mean,SD),List,Standardized)
+    ).
+standardizing(Mean,SD,X,Standardized):-
+    Standardized is (X - Mean) / SD.
+
+
+/**
+* entropy()
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.entropy.html
  * */
 
 /**
  * delete_nth(+List:numbers,+Index:numbers,-LDeleted:number)
  * LDeleted is List with the element at pos Index removed, counting from 1
  * If Index is greater than the length of the list, fails
- * example: delete_nth([1,2,7,4],3,[1,2,4])
- * TODO: multidimensional data: delete_nth([[1,2,7,4],[1,2,7,4]],3,[[1,2,4],[1,2,4]])
+ * Example: delete_nth([1,2,7,4],3,L).
+ * Expected: L = [1,2,4].
  * */
 delete_nth(L,N,LDeleted):-
     L = [A|_],
@@ -852,8 +973,24 @@ choose(N,K,C):-
     factorial(NMinusK,NMKF),
     C is NF / (NMKF * KF).
 
-% random variables 
+/**
+ * random_list(+NElements:number,+Lower:number,+Upper:number,-List:numbers).
+ * List is a list of NElements random numbers between Lower and Upper
+ * example: random_list(3,2,4,R).
+ * */
+% random_list(N,Lower,Upper,L):-
+%     ( N =< 0 ->
+%         writeln("The number of elements must be greater than 0"),
+%         false;
+%         sample_var(uniform,Lower,Upper,N,L)
+%     ).
+
+% random variables
 % expected_value_var(Val,Occ,Exp)
 % variance_var(Val,Occ,Exp)
 
 % TODO: set verbose/0 with assert to test also failures without printing
+
+%%%%%%%%
+% statistical tests
+%%%%%%%%
