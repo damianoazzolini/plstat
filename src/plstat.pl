@@ -8,6 +8,9 @@
     mean/2,
     median/2,
     mode/2,
+    percentile/3,
+    quartile/3,
+    iqr/2,
     rms/2,
     sum_of_squares/2,
     variance/2,
@@ -48,10 +51,11 @@
     sample/3,
     sample/4,
     sample/5,
+    empirical_distribution/3,
     seq/4,
     factorial/2,
-    choose/3,
-    random_list/4 % to uncomment when random vars are implemented
+    choose/3
+    % random_list/4 % to uncomment when random vars are implemented
     ]).
 
 :- [utils].
@@ -66,7 +70,7 @@ multidim2(Predicate,List,Res):-
     ).
 
 /**
- * mean(-List:number,+Mean:float)
+ * mean(+List:number,-Mean:float)
  * Mean is the mean of the list List
  * List can also be multidimensional (list of lists)
  * Example: mean([1,2,3],M).
@@ -84,7 +88,7 @@ mean_(L,Mean):-
 	Mean is S/N.
 
 /**
- * median(-List:number,+Median:number)
+ * median(+List:number,-Median:number)
  * Median is the median of the list List
  * List can also be multidimensional (list of lists)
  * example: median([1,2,3],2).
@@ -108,7 +112,7 @@ median_(L,Median):-
     ).
 
 /**
- * mode(-List:number,+Mode:list)
+ * mode(+List:number,-Mode:list)
  * Mode is the mode of the list List
  * List can also be multidimensional (list of lists)
  * example: mode([1,2,3,1],[1]).
@@ -127,39 +131,83 @@ mode_(L,Mode):-
     findall(V,member([V,O],Occ),Mode).
 
 /**
- * percentile(-List:number,-K:number,+Percentile:number)
+ * percentile(+List:number,+K:number,-Percentile:number)
  * Percentile is the k-th percentile of the list
- * test: percentile([1,2,3,4,6,5,9],40,3.2).
- * TODO
+ * Both List and K can be multidimensional (lists of lists)
+ * Algorithm: arrange the data in ascending order,
+ * compute r = (p/100) * (n-1) + 1 where p is the percentile
+ * If r is integer, then the r-th element is the desired percentile
+ * Otherwise, it is x_ceil(r) + (r - ceil(r)) * (x_(ceil(r)+ 1) - x_ceil(r)) 
+ * The last formula is valid in both cases
+ * Example: percentile([1,2,3,4,6,5,9],40,P).
+ * Expected: P = 3.4
+ * Example: percentile([1,2,3,4,6,5],40,P).
+ * Expected: P = 3.0
+ * Example: percentile([1,2,3,4,6,5],[10,40],P)
+ * Expected: P = [1.5,3.0]
+ * Example: percentile([[1,2,3,4,6,5],[15,25]],[10,40],P).
+ * Expected: P = [[1.5,3.0],[16.0,19.0]].
  * */
-% percentile([],_,0):- !.
-% percentile(_,N,_):-
-%     (N < 0 ; N > 100),
-%     writeln('k must be between 0 and 100'),
-%     false.
-% percentile(L,K,Percentile):-
-%     msort(L,LS),
-%     KP is K / 100,
-%     length(L,N),
-%     I is KP * N,
-%     RI is round(I),
-%     nth1(RI, LS, Percentile).
+percentile([],_,0):- !.
+percentile(L,K,Percentile):-
+    ( L = [A|_], is_list(A) -> 
+        maplist(percentile_list(K),L,Percentile);
+        percentile_list(K,L,Percentile)
+    ).
+percentile_list(K,L,P):-
+    ( is_list(K) ->
+        maplist(percentile_single(L),K,P);
+        percentile_single(L,K,P)
+    ).
+percentile_single(L,K,Percentile):-
+    ( (K =< 0 ; K >= 100) ->
+        writeln('k must be between 0 and 100'),
+        false ;
+        msort(L,LS),
+        length(L,N),
+        R is (K / 100)*(N - 1) + 1,
+        RI is floor(R),
+        RII is RI + 1,
+        nth1(RI,LS,V1),
+        nth1(RII,LS,V2),
+        RF is R - RI,
+        Percentile is V1 + RF * (V2 - V1)
+    ).
 
 /**
- * iqr(+List:number,IQR:number)
- * IQR is the inter quartile range of List
- * 3 - 1 quartile
- * TODO
- * test: iqr([1,2,3,4,6,5,9],I) 
+ * quartile(+List:number,+Q:number,-Quartile:number)
+ * Quartile is the Q quartile of the list List
+ * Both List and Q can be multidimensional (lists of lists)
+ * Wrapper for percentile
+ * Example: quartile([15,25],2,Q).
+ * Expected: Q = 20
  * */
-% iqr([],_):- false.
-% iqr(L,IQR):-
-%     percentile(75,III),
-%     percentile(25,I),
-%     IQR is III - I.
+quartile(L,Q,Quartile):-
+    LQ = [1,2,3],
+    ( member(Q,LQ) ->
+        !,
+        QP is Q * 25, 
+        percentile(L,QP,Quartile) ;
+        writeln("Insert a valid quartile (1,2, or 3)"),
+        false
+    ).
 
 /**
- * rms(+List:number,RMS:number)
+ * iqr(+List:number,-IQR:number)
+ * IQR is the inter quartile range of list List
+ * computed as the difference between 3rd - 1st quartile
+ * List can also be multidimensional (list of lists)
+ * Example: iqr([1,2,3,4,6,5],I).
+ * Expected: I = 2.5.
+ * */
+iqr([],_):- false.
+iqr(L,IQR):-
+    quartile(L,3,III),
+    quartile(L,1,I),
+    IQR is III - I.
+
+/**
+ * rms(+List:number,-RMS:number)
  * RMS is the root mean square of the list List
  * List can also be multidimensional (list of lists)
  * Square root of the sum of the squared data values divided by the number of values
@@ -919,6 +967,46 @@ sample(List,Size,Replace,Probabilities,Result):-
             false ;
             sample_list_prob(List,Size,Replace,Probabilities,Result)
     ).
+
+/**
+ * empirical_distribution(+List:numbers,+X:number,-Result:list)
+ * Result is the empirical distribution of list List at point X
+ * List and X can also be multidimensional (lists of lists)
+ * Example: empirical_distribution([0,1,2,2,4,6,6,7],0,E)
+ * Expected: 0.125
+ * Example: empirical_distribution([0,1,2,2,4,6,6,7],2,E)
+ * Expected: 0.5
+ * Example: empirical_distribution([0,1,2,2,4,6,6,7],7,E)
+ * Expected: 1
+ * Example: empirical_distribution([[0,1,2,2,4,6,6,7],[1,2,4]],[6,7,8],E)
+ * Expected: [[0.875,1,1],[1,1,1]]
+ * */
+empirical_distribution(L,X,R):-
+    ( L = [A|_], is_list(A) -> 
+        maplist(empirical_distribution_list(X),L,R);
+        empirical_distribution_list(X,L,R)
+    ).
+empirical_distribution_list(X,L,R):-
+    ( is_list(X) ->
+        maplist(empirical_distribution_single(L),X,R);
+        empirical_distribution_single(L,X,R)
+    ).
+empirical_distribution_single(List,X,R):-
+    length(List,N),
+    ( X < 0 ->
+        R = 0 ;
+      X >= N ->
+        R = 1 ;
+        msort(List,LS),
+        nth0(X,LS,Num),
+        findall(I,nth0(I,LS,Num),LI),
+        max_list(LI,Max),
+        D is Max - X + 1,
+        X1 is X + D,
+        R is X1 / N
+    ).
+
+
 
 /**
  * sample_distribution()

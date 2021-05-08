@@ -8,6 +8,7 @@ test_list([
     mean,
     median,
     mode,
+    percentile,
     rms,
     sum_of_squares,
     variance,
@@ -43,6 +44,7 @@ test_list([
     delete_nth,
     normalize_prob,
     sample,
+    empirical_distribution,
     seq,
     choose,
     factorial
@@ -68,7 +70,7 @@ close_to(V,V1):-
 % statistics
 :- begin_tests(mean, []).
 test(mean_1):- mean([1,2,3],2).
-test(mean_2):- mean([[1,3,4],[7,67]],[2.6666666666666665, 37]).
+test(mean_2):- mean([[1,3,4],[7,67]],[2.6666666666666665,37]).
 :- end_tests(mean).
 
 :- begin_tests(median, []).
@@ -82,6 +84,13 @@ test(mode_1):- mode([1,2,3,1],[1]).
 test(mode_2):- mode([1,2,3,4],[1,2,3,4]).
 test(mode_3):- mode([[1,5,64],[27,67]],[[1,5,64],[27,67]]).
 :- end_tests(mode).
+
+:- begin_tests(percentile, []).
+test(percentile_1):- percentile([1,2,3,4,6,5,9],40,P), close_to(P,3.4).
+test(percentile_2):- percentile([1,2,3,4,6,5],40,P), close_to(P,3).
+test(percentile_3):- percentile([1,2,3,4,6,5],[10,40],P), L = [1.5,3.0], maplist(close_to,L,P).
+test(percentile_4):- percentile([[1,2,3,4,6,5],[15,25]],[10,40],[PA,PB]), L1 = [1.5,3.0], L2 = [16.0, 19.0], maplist(close_to,L1,PA), maplist(close_to,L2,PB).
+:- end_tests(percentile).
 
 :- begin_tests(rms, []).
 test(rms_1):- rms([1,5,8,3],V),close_to(V,4.97493).
@@ -255,6 +264,13 @@ test(normalize_prob_3):- \+ normalize_prob([0.3,-0.14,0.07],_).
 test(sample_1):- LIn = [1,2,3,4,5], sample(LIn,5,L), sort(L,LIn).
 test(sample_2):- LIn = [1,2,3,4,5], sample(LIn,5,false,L), sort(L,LIn).
 :- end_tests(sample).
+
+:- begin_tests(empirical_distribution, []).
+test(empirical_distribution_1):- empirical_distribution([0,1,2,2,4,6,6,7],0,E), close_to(E,0.125).
+test(empirical_distribution_2):- empirical_distribution([0,1,2,2,4,6,6,7],2,E), close_to(E,0.5).
+test(empirical_distribution_3):- empirical_distribution([0,1,2,2,4,6,6,7],7,1).
+test(empirical_distribution_4):- empirical_distribution([[0,1,2,2,4,6,6,7],[1,2,4]],[6,7,8],[E1,E2]), L1 = [0.875,1,1], L2 = [1,1,1], maplist(close_to,L1,E1), maplist(close_to,L2,E2).
+:- end_tests(empirical_distribution).
 
 :- begin_tests(seq, []).
 test(seq_1):- seq(1,10,1,[1,2,3,4,5,6,7,8,9,10]).
