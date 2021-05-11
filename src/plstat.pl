@@ -35,6 +35,8 @@
     rescale/4,
     mean_normalize/2,
     standardize/2,
+    entropy/2,
+    entropy/3,
     min_val/2, % wrapper for min_list
     max_val/2, % wrapper for max_list
     min_max_val/3,
@@ -54,18 +56,24 @@
     empirical_distribution/3,
     seq/4,
     factorial/2,
-    choose/3
-    % random_list/4 % to uncomment when random vars are implemented
+    choose/3,
+    search_position_sorted/3,
+    search_position_sorted/4
     ]).
 
 :- [utils].
-% :- [random_vars].
 
+eval_fraction_list(LF,LE):-
+    maplist(eval_fraction,LF,LE).
+eval_fraction(F,E):-
+    E is F.
 % multidimensional wrapper
 multidim2(Predicate,List,Res):-
-    ( List = [A|_], is_list(A) -> 
-        maplist(Predicate,List,Res);
-        Call =.. [Predicate,List,Res],
+    ( List = [A|_], is_list(A) ->
+        maplist(eval_fraction_list,List,L),
+        maplist(Predicate,L,Res);
+        maplist(eval_fraction,List,L),
+        Call =.. [Predicate,L,Res],
         Call
     ).
 
@@ -76,24 +84,26 @@ multidim2(Predicate,List,Res):-
  * Example: mean([1,2,3],M).
  * Expected: M = 2.
  * Example: mean([[1,3,4],[7,67]],L).
- * Expected: [2.666,37]
-*/
+ * Expected: [2.666,37].
+ * */
 mean([],0):- !.
 mean([E],E):- number(E), !.
 mean(L,Mean):-
     multidim2(mean_,L,Mean).
 mean_(L,Mean):-
 	length(L,N),
-	sum_list(L,S),
+	sum(L,S),
 	Mean is S/N.
 
 /**
  * median(+List:number,-Median:number)
  * Median is the median of the list List
  * List can also be multidimensional (list of lists)
- * example: median([1,2,3],2).
- * example: median([[1,5,64],[27,67]],[5, 47]).
-*/
+ * Example: median([1,2,3],M).
+ * Expected: M = 2.
+ * Example: median([[1,5,64],[27,67]],M).
+ * Expected: M = [5, 47].
+ * */
 median([],0):- !.
 median([E],E):- number(E), !.
 median(L,Median):-
@@ -115,20 +125,24 @@ median_(L,Median):-
  * mode(+List:number,-Mode:list)
  * Mode is the mode of the list List
  * List can also be multidimensional (list of lists)
- * example: mode([1,2,3,1],[1]).
- * example: mode([[1,5,64],[27,67]],[[1,5,64], [27,67]])
-*/
+ * Example: mode([1,2,3,1],M).
+ * Expected: M = 1.
+ * Example: mode([[1,5,64],[27,67]],M).
+ * Expected: M = [[1,5,64], [27,67]].
+ * */
 comp(<,[_,A1],[_,A2]) :- A1 > A2. % to have in descending order
 comp(>, _, _).
 mode([],0):- !.
 mode([E],E):- number(E), !.
 mode(L,Mode):-
     multidim2(mode_,L,Mode).
-mode_(L,Mode):-
+mode_(L,ModeC):-
 	occurrences(L,Occ),
     predsort(comp,Occ,X),
     X = [[_,O]|_],
-    findall(V,member([V,O],Occ),Mode).
+    findall(V,member([V,O],Occ),Mode),
+    length(Mode,Mod),
+    (Mod = 1 -> Mode = [ModeC] ; ModeC = Mode).
 
 /**
  * percentile(+List:number,+K:number,-Percentile:number)
@@ -140,11 +154,11 @@ mode_(L,Mode):-
  * Otherwise, it is x_ceil(r) + (r - ceil(r)) * (x_(ceil(r)+ 1) - x_ceil(r)) 
  * The last formula is valid in both cases
  * Example: percentile([1,2,3,4,6,5,9],40,P).
- * Expected: P = 3.4
+ * Expected: P = 3.4.
  * Example: percentile([1,2,3,4,6,5],40,P).
- * Expected: P = 3.0
+ * Expected: P = 3.0.
  * Example: percentile([1,2,3,4,6,5],[10,40],P)
- * Expected: P = [1.5,3.0]
+ * Expected: P = [1.5,3.0].
  * Example: percentile([[1,2,3,4,6,5],[15,25]],[10,40],P).
  * Expected: P = [[1.5,3.0],[16.0,19.0]].
  * */
@@ -180,7 +194,7 @@ percentile_single(L,K,Percentile):-
  * Both List and Q can be multidimensional (lists of lists)
  * Wrapper for percentile
  * Example: quartile([15,25],2,Q).
- * Expected: Q = 20
+ * Expected: Q = 20.
  * */
 quartile(L,Q,Quartile):-
     LQ = [1,2,3],
@@ -211,7 +225,8 @@ iqr(L,IQR):-
  * RMS is the root mean square of the list List
  * List can also be multidimensional (list of lists)
  * Square root of the sum of the squared data values divided by the number of values
- * example: rms([1,5,8,3],4.97493).
+ * Example: rms([1,5,8,3],S).
+ * Expected: S = 4.97493.
  * */
 square(X,XS):-
     pow(X,2,XS).
@@ -221,15 +236,16 @@ rms(L,RMS):-
 rms_(L,RMS):-
     length(L,N),
     maplist(square,L,LS),
-    sum_list(LS, SS),
+    sum(LS, SS),
     RMS is sqrt(SS / N).
 
 /**
  * sum_of_squares(+List:number,-SumOfSquares:number)
  * SumOfSquares is the sum of squares of the list List
  * List can also be multidimensional (list of lists)
- * compute \sum_n (x - \mu)^2
- * example: sum_of_squares([1,2,3],2)
+ * Formula: \sum_n (x - \mu)^2
+ * Example: sum_of_squares([1,2,3],S)
+ * Expected: S = 2.
  * */
 diff_square(Mu,B,D):-
     AB is B - Mu,
@@ -241,14 +257,15 @@ sum_of_squares(List,SumOfSquares):-
 sum_of_squares_(L,SumSquared):-
     mean(L,Mean),
     maplist(diff_square(Mean),L,Res),
-    sum_list(Res,SumSquared).
+    sum(Res,SumSquared).
 
 /**
  * variance(+List:number,-Variance:number)
  * Variance is the sample variance of the list List
  * List can also be multidimensional (list of lists)
- * (1/(N - 1)) * \sum_n (x_i - \mu)^2
- * example: variance([1,2,4,6,7,8,9],9.2380952)
+ * Formula: (1/(N - 1)) * \sum_n (x_i - \mu)^2
+ * Example: variance([1,2,4,6,7,8,9],V).
+ * Expected: V = 9.2380952.
  * */
 variance([],0):- !.
 variance([E],0):- number(E), !.
@@ -264,8 +281,9 @@ variance_(L,Var):-
  * pop_variance(+List:number,-Variance:number)
  * Variance is the population variance of the list List
  * List can also be multidimensional (list of lists)
- * (1/N) * \sum_n (x_i - \mu)^2
- * pop_variance([1,4,6,72,1],765.3600).
+ * Formula: (1/N) * \sum_n (x_i - \mu)^2
+ * Example: pop_variance([1,4,6,72,1],V).
+ * Expected: V = 765.3600.
  * */
 pop_variance([],0):- !.
 pop_variance([E],0):- number(E), !.
@@ -279,7 +297,8 @@ pop_variance_(L,Var):-
 /* std_dev(+List:numbers,-StdDev:number)
  * StdDev is the standard deviation (square root of the sample variance)
  * List can also be multidimensional (list of lists)
- * example: std_dev([1,2,4,6,7,8,9],3.039424)
+ * Example: std_dev([1,2,4,6,7,8,9],S).
+ * Expected: S = 3.039424.
  * */
 std_dev(L,StdDev):-
     multidim2(std_dev_,L,StdDev).
@@ -290,7 +309,8 @@ std_dev_(L,StdDev):-
 /* pop_std_dev(+List:numbers,-StdDev:number)
  * StdDev is the standard deviation (square root of the population variance)
  * List can also be multidimensional (list of lists)
- * example: pop_std_dev([1,2,4,6,7,8,9],3.039424)
+ * Example: pop_std_dev([1,2,4,6,7,8,9],S).
+ * Expected: S = 3.039424.
  * */
 pop_std_dev(L,StdDev):-
     multidim2(pop_std_dev_,L,StdDev).
@@ -303,7 +323,8 @@ pop_std_dev_(L,StdDev):-
  * Range is the difference between the biggest and the smallest
  * element of the list List
  * List can also be multidimensional (list of lists)
- * example: range([1,2,4,6,7,8,9],8).
+ * Example: range([1,2,4,6,7,8,9],R).
+ * Expected: R = 8.
  * */
 range([],0):- !.
 range([E],E):- number(E), !.
@@ -318,7 +339,8 @@ range_(L,Range):-
  * midrange(+List:numbers,-Midrange:number)
  * Midrange is (Max - Min) / 2
  * List can also be multidimensional (list of lists)
- * example: midrange([1,2,4,6,7,8,9],4).
+ * Example: midrange([1,2,4,6,7,8,9],M).
+ * Expected: M = 4.
  * */
 midrange(L,Range):-
     multidim2(midrange_,L,Range).
@@ -331,7 +353,8 @@ midrange_(L,Midrange):-
  * MAD is the sum of the absolute value of the differences between data values and the mean, divided by the sample size.
  * MAD = 1/N * \sum_i |x - \mu|
  * List can also be multidimensional (list of lists)
- * example: mean_absolute_deviation([1,2,4,6,7,8,9],2.5306122).
+ * Example: mean_absolute_deviation([1,2,4,6,7,8,9],M).
+ * Expected: M = 2.5306122.
  * */
 diff_abs(A,B,D):-
     AB is A - B,
@@ -342,14 +365,15 @@ mean_absolute_deviation(L,MAD):-
 mean_absolute_deviation_(L,MAD):-
     mean(L,Mean),
     maplist(diff_abs(Mean),L,LD),
-    sum_list(LD,S),
+    sum(LD,S),
     length(L,N),
     MAD is (1/N) * S.
 
 /**
- * covariance(+List1:numbers,-List2:numbers,-Covariance:number)
- * Covariance is the covariance of List1 and List2
- * example: covariance([5,12,18,23,45],[2,8,18,20,28],146.1).
+ * covariance(+List1:numbers,+List2:numbers,-Covariance:number)
+ * Covariance is the covariance of the lists List1 and List2
+ * Example: covariance([5,12,18,23,45],[2,8,18,20,28],C).
+ * Expected: C = 146.1
  * */
 sub(A,B,C):-
     C is B - A.
@@ -369,14 +393,15 @@ covariance(L1,L2,Cov):-
     maplist(sub(M1),L1,LS1),
     maplist(sub(M2),L2,LS2),
     maplist(mul,LS1,LS2,LP),
-    sum_list(LP,S),
+    sum(LP,S),
     Cov is S / (N - 1).
 
 /**
  * correlation(+List1:numbers,-List2:numbers,-Correlation:number)
  * Correlation is the correlation of List1 and List2
- * covariance(List1,List2) / (std_dev(List1) * std_dev(List2))
- * example: correlation([5,12,18,23,45],[2,8,18,20,28],146.1).
+ * Formula: covariance(List1,List2) / (std_dev(List1) * std_dev(List2))
+ * Example: correlation([5,12,18,23,45],[2,8,18,20,28],C).
+ * Expected: C = 0.9366.
  * */
 correlation(L1,L2,_):-
     length(L1,N),
@@ -393,8 +418,9 @@ correlation(L1,L2,Corr):-
 
 /**
  * weighted_mean(+List:numbers,+Weights:numbers,-WM:number)
- * WM is the weighted mean: \sum x_i*w_i / \sum w_i
- * example: weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],19.1972).
+ * WM is the weighted mean of the list List: \sum x_i*w_i / \sum w_i
+ * Example: weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],WM).
+ * Expected: WM = 19.1972.
  * */
 weighted_mean(L1,L2,_):-
     length(L1,N),
@@ -404,16 +430,18 @@ weighted_mean(L1,L2,_):-
     write('Found '), write(N), write(' '), writeln(M),
     false.
 weighted_mean(List,Weights,WM):-
-    sum_list(Weights, SW),
+    sum(Weights, SW),
     maplist(mul,List,Weights,LP),
-    sum_list(LP,LS),
+    sum(LP,LS),
     WM is LS / SW.
 
 /**
  * harmonic_mean(+List:numbers,-HM:number)
- * HM is the harmonic mean:  n / (1/x1 + 1/x2 + ... + 1/xn)
+ * HM is the harmonic mean of list List 
+ * Formula: n / (1/x1 + 1/x2 + ... + 1/xn)
  * List can also be multidimensional (list of lists)
- * example: harmonic_mean([1,2,3,4,5,6,7],2.69972).
+ * Example: harmonic_mean([1,2,3,4,5,6,7],HM).
+ * Expected: HM = 2.69972
  * */
 rec(0,_):- writeln('Cannot divide by 0'), false.
 rec(X,X1):- X1 is 1/X.
@@ -423,36 +451,49 @@ harmonic_mean(L,HM):-
 harmonic_mean_(L,HM):-
     length(L,N),
     maplist(rec,L,LR),
-    sum_list(LR,SLR),
+    sum(LR,SLR),
     HM is N / SLR.
 
 /**
  * trimmed_mean(+List:numbers,+Lower:number,+Upper:number,-TM:number)
- * TM is the trimmed mean: the mean computed by considering only numbers 
+ * TM is the trimmed mean of the list List, i.e., 
+ * the mean computed by considering only numbers 
  * in the range [Lower,Upper]
- * example: trimmed_mean([1,2,3,4,5,6,7],3,5,4).
+ * example: trimmed_mean([1,2,3,4,5,6,7],3,5,T)
+ * Expected: T = 4
  * */
 trimmed_mean([],_,_,0).
+trimmed_mean(_,L,U,_):-
+    L > U, !,
+    writeln("The lower bound must be actually smaller than the upper bound"),
+    false.
 trimmed_mean(L,Lower,Upper,TM):-
     include(between(Lower,Upper),L,LO),
     mean(LO,TM).
 
 /**
  * trimmed_variance(+List:numbers,+Lower:number,+Upper:number,-TV:number)
- * TV is the trimmed variance: the variance computed by considering only numbers 
+ * TV is the trimmed variance of the list List, i.e, 
+ * the variance computed by considering only numbers 
  * in the range [Lower,Upper]
- * example: trimmed_variance([1,2,3,4,5,6,7],3,5,1.0).
+ * Example: trimmed_variance([1,2,3,4,5,6,7],3,5,V)
+ * Expected: V = 1.0
  * */
 trimmed_variance([],_,_,0).
+trimmed_variance(_,L,U,_):-
+    L > U, !,
+    writeln("The lower bound must be actually smaller than the upper bound"),
+    false.
 trimmed_variance(L,Lower,Upper,TV):-
     include(between(Lower,Upper),L,LO),
     variance(LO,TV).
 
 /**
  * moment(+List:numbers,+M:integer,-Moment:number)
- * Moment is the M-th moment about the mean for List
- * 1/n \sum (x_i - x_mean) ^ M
- * example: moment([1,2,3,4,5],2,2)
+ * Moment is the M-th moment about the mean for the list List
+ * Formula: 1/n \sum (x_i - x_mean) ^ M
+ * Example: moment([1,2,3,4,5],2,MO)
+ * Expected: MO = 2
  * */
 diff_and_power(Exp,Mean,Number,R):-
     D is Number - Mean,
@@ -467,10 +508,11 @@ moment(L,M,Moment):-
 
 /**
  * skew(+List:numbers,-Skew:number)
- * Skew is the sample skewness of List
+ * Skew is the sample skewness of list List
  * Skew = m_3 / (m_2)^(3/2)
  * List can also be multidimensional (list of lists)
- * example: skew([2,8,0,4,1,9,9,0],0.26505541)
+ * Example: skew([2,8,0,4,1,9,9,0],S)
+ * Expected: S = 0.26505541
  * TODO: consider also the version with bias false
  * */
 skew([],0):- !.
@@ -601,7 +643,7 @@ look_in_average([[V,Rank]|T],[[V,Rank1]|T0]):-
     ( NR is 0 ->  
     	Rank1 = Rank,
         T1 = T;
-    	sum_list(LR,S),
+    	sum(LR,S),
         Rank1 is (S+Rank) / (NR+1),
         delete(T,[V,_],T1)
     ),
@@ -611,11 +653,6 @@ look_in_average([[V,Rank]|T],[[V,Rank1]|T0]):-
 compute_average(LS,I,LAvg):-
     compute_ordinal(LS,I,LAvg1),
     look_in_average(LAvg1,LAvg).
-
-%%%%%%%
-% random variables
-%%%%%%%
-
 
 %%%%%%%%
 % other utils
@@ -689,7 +726,8 @@ count_occ([H|T],L,[[H,Occ]|T1]):-
 /**
  * occurrences(+Number:number,+List:numbers,-Occ:list)
  * Occ is the occurrences of Number in List
- * example: occurrences([1,2,4,6,7,8,9,1],1,2).
+ * Example: occurrences([1,2,4,6,7,8,9,1],1,O).
+ * Expected: O = 2
  * */
 occurrences([],_,0).
 occurrences(L,E,0):- ground(E), \+member(E,L).
@@ -711,7 +749,7 @@ min_val(L,M):-
  * max_val(+List:numbers,-Max:number)
  * Max is the minimum of the list, wrapper for max_list/2
  * List can also be multidimensional (list of lists)
- * Example: max_val([1,2,4,6,7,8,9,1],9).
+ * Example: max_val([1,2,4,6,7,8,9,1],M).
  * Expected: M = 9.
  * */
 max_val(L,M):-
@@ -781,7 +819,7 @@ normalize_prob(L,LNorm):-
     multidim2(normalize_prob_,L,LNorm).
 normalize_prob_(L,LNorm):-
     maplist(between_float(0,1),L),
-    sum_list(L,SL),
+    sum(L,SL),
     maplist(div(SL),L,LNorm).
 
 /**
@@ -793,7 +831,9 @@ normalize_prob_(L,LNorm):-
  * If Lower and Upper are not provided, they are set by default to 0 and 1
  * Every x is rescaled as Lower + ((x - min_list)*(Upper - Lower)) / (max_list - min_list)
  * Example: rescale([0.07,0.14,0.07],L).
+ * Expected: L = [0.0,1.0,0.0]
  * Example: rescale([0.07,0.14,0.07],2,3,L).
+ * Expected: L = [2.0,3.0,2.0]
  * */
 rescale([],[]).
 rescale(L,LResc):-
@@ -864,11 +904,45 @@ standardize_(List,Standardized):-
 standardizing(Mean,SD,X,Standardized):-
     Standardized is (X - Mean) / SD.
 
-
 /**
-* entropy()
-https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.entropy.html
+ * entropy(+List:numbers,-Entropy:number)
+ * entropy(+List:numbers,+Probabilities:number,-Entropy:number)
+ * Entropy is the entropy of the list List
+ * Formula: is probabilities are not provided, then 
+ * E = -sum(pk * log(pk)
+ * else
+ * E = sum(pk * log(pk / qk)
+ * Logarithm in base e (natural logarithm) is computed
+ * Example: entropy([9/10,1/10],E).
+ * Expected: E = 0.325082.
+ * Example: entropy([1/2,1/2],[9/10,1/10],E).
+ * Expected: E = 0.5108256.
  * */
+prod_and_log(P,PR):-
+    PR is P * log(P).
+prod_and_log_div(P,Q,PR):-
+    D is P/Q,
+    PR is P * log(D).
+entropy(L,E):-
+    maplist(prod_and_log,L,PR),
+    sum(PR,S),
+    E is -S.
+entropy(L,LP,E):-
+    eval_fraction_list(LP,LPP),
+    sum(LPP,S),
+    ( S \= 1.0 ->
+        writeln("Probabilities must sum to 1"), 
+        false;
+        true
+    ),
+    writeln(LPP),
+    ( maplist(<(0),LPP),maplist(>(1),LPP) -> 
+        true;
+        writeln("Probabilities must be between 0 and 1"),
+        false
+    ),
+    maplist(prod_and_log_div,L,LP,P),
+    sum(P,E).
 
 /**
  * delete_nth(+List:numbers,+Index:numbers,-LDeleted:number)
@@ -958,7 +1032,7 @@ sample(List,Size,Replace,Probabilities,Result):-
     ( ( Replace \= true , Replace \= false ) ->
         writeln("Set Replace to true or false"),
         false ;
-        \+ sum_list(Probabilities,1.0) ->
+        \+ sum(Probabilities,1.0) ->
             writeln("Probabilities must sum to 1"),
             false ;
             length(List,NL), length(Probabilities,NP),
@@ -1006,20 +1080,14 @@ empirical_distribution_single(List,X,R):-
         R is X1 / N
     ).
 
-
-
-/**
- * sample_distribution()
- * Sample from the specified distribution
- * */
-
 /**
  * seq(A:number,B:number,Seq:List).
  * seq(A:number,B:number,Step:number,Seq:List).
  * List is a list with a sequence ranging from A to B with step Step
  * If step is not provided, 0 is assumed
- * test: seq(1,10,1,[1,2,3,4,5,6,7,8,9,10])
-*/
+ * Example: seq(1,10,1,S)
+ * Expected: S = [1,2,3,4,5,6,7,8,9,10]
+ * */
 seq(A,B,L):-
     seq(A,B,1,L).
 seq(A,A,1,[A]):- !.
@@ -1034,6 +1102,8 @@ seq(A,B,Step,[A|T]):-
 /**
  * factorial(+N:int,-Factorial:int)
  * Factorial is N! = N*(N-1)*...*2*1
+ * Example: factorial(10,F)
+ * Expected: F = 3628800
  * */
 factorial(0,1).
 factorial(1,1):- !.
@@ -1049,6 +1119,8 @@ factorial_aux(N,V,F):-
  * choose(+N:int,+K:int,-C:int)
  * C is the binomial coefficient N,K
  * fact(N) / (fact(N-K) * fact(K))
+ * Example: choose(10,3,C)
+ * Expected: C = 120
  * */
 choose(N,K,1):- N =< K.
 choose(N,K,C):-
@@ -1079,6 +1151,67 @@ choose(N,K,C):-
 
 % TODO: set verbose/0 with assert to test also failures without printing
 
-%%%%%%%%
-% statistical tests
-%%%%%%%%
+/**
+ * search_position_sorted(+List:numbers,+Element:number,-Pos:integer)
+ * search_position_sorted(+List:numbers,+Element:number,+Direction:term,-Pos:integer)
+ * Pos is the position that the element Element would have when inserted
+ * in list List to preserve its order
+ * 0 means the first location. If the element should be inserted in the
+ * last position, Pos = N where N is the length of List
+ * Counting from 1
+ * List and Element can also be multidimensional (lists of lists)
+ * Direction can be left (default) or right 
+ * Example: search_position_sorted([1,2,3,4,5],3,P)
+ * Expected result: P = 2
+ * Example: search_position_sorted([1,2,3,4,5],3,right,P)
+ * Expected result: P = 3 
+ * % https://numpy.org/doc/stable/reference/generated/numpy.searchsorted.html
+ * */
+search_position_sorted(List,Element,Pos):-
+    search_position_sorted(List,Element,left,Pos).
+search_position_sorted(List,Element,Direction,Pos):-
+    L = [right,left],
+    (\+member(Direction,L) -> writeln("Position must be left or right"), false ; true),
+    ( List = [A|_], is_list(A) -> 
+        maplist(search_position_sorted_list(Element,Direction),List,Pos);
+        search_position_sorted_list(Element,Direction,List,Pos)
+    ).
+search_position_sorted_list(X,Direction,L,R):-
+    ( is_list(X) ->
+        maplist(search_position_sorted_single(L,Direction),X,R);
+        search_position_sorted_single(L,Direction,X,R)
+    ).
+search_position_sorted_single(L,Direction,X,R):-
+    msort(L,Sorted),
+    ( Direction = right -> 
+        search_pos(L,X,1,0,R) ; 
+        length(Sorted,N),
+        search_pos(L,X,-1,N,R)
+    ).
+search_pos([],_,_,P,P).
+search_pos([H|T],El,Inc,CP,P):-
+    ( El < H -> 
+        CP = P ;
+        CP1 is CP + Inc,
+        search_pos(T,El,Inc,CP1,P)
+    ).
+
+
+% /**
+%  * sample_distribution()
+%  * Sample from the specified distribution
+%  * */
+% sample_distribution(uniform,S):-
+%     sample_distribution(uniform,1,0,1,S).
+% sample_distribution(uniform,Lower,Upper,S):-
+%     sample_distribution(uniform,1,Lower,Upper,S).
+% sample_distribution(uniform,NSamples,Lower,Upper,S):-
+%     ( NSamples < 0 ->
+%         writeln("Number of samples must be greater than 0"),
+%         false ;
+%         length(S,NSamples),
+%         maplist(sample_uniform(Lower,Upper),S)
+%     ).
+% sample_uniform(Lower,Upper,S):-
+%     random(R),
+%     S is (Upper - Lower + 1) * R + Lower.    
