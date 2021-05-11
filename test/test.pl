@@ -30,6 +30,7 @@ test_list([
     rescale,
     mean_normalize,
     standardize,
+    entropy,
     rank,
     nth_row,
     nth_column,
@@ -47,7 +48,8 @@ test_list([
     empirical_distribution,
     seq,
     choose,
-    factorial
+    factorial,
+    search_position_sorted
   ]).
 
 test:-
@@ -55,11 +57,6 @@ test:-
     length(L,N),
     write('Testing '), write(N), writeln(' predicates'),
 	run_tests(L).
-
-test_plstat_rev:-
-    test_list(L),
-	reverse(L,Rev),
-    run_tests(Rev).
 
 close_to(V,V1):-
     VU is V1 + 0.0005, 
@@ -80,7 +77,7 @@ test(median_3):- median([[1,5,64],[27,67]],[5,47]).
 :- end_tests(median).
 
 :- begin_tests(mode, []).
-test(mode_1):- mode([1,2,3,1],[1]).
+test(mode_1):- mode([1,2,3,1],1).
 test(mode_2):- mode([1,2,3,4],[1,2,3,4]).
 test(mode_3):- mode([[1,5,64],[27,67]],[[1,5,64],[27,67]]).
 :- end_tests(mode).
@@ -244,6 +241,10 @@ test(mean_normalize_1):- mean_normalize([1,2,4],L), LRes = [-0.444, -0.1111, 0.5
 test(standardize_1):- standardize([[1,2,4],[1,2,4]],[L,L]), LRes = [-1.06904,-0.2672612,1.336306],  maplist(close_to,L,LRes).
 :- end_tests(standardize).
 
+:- begin_tests(entropy, []).
+test(entropy_1):- entropy([9/10,1/10],E), close_to(E,0.325082).
+test(entropy_2):- entropy([1/2,1/2],[9/10,1/10],E), close_to(E,0.5108256).
+:- end_tests(entropy).
 
 :- begin_tests(delete_nth, []).
 test(delete_nth_1):- delete_nth([1,2,7,4],3,[1,2,4]).
@@ -283,3 +284,11 @@ test(choose_1):- choose(10,3,120).
 :- begin_tests(factorial, []).
 test(factorial_1):- factorial(10,3628800).
 :- end_tests(factorial).
+
+:- begin_tests(search_position_sorted, []).
+test(search_position_sorted_1):- search_position_sorted([1,2,3,4,5],3,2).
+test(search_position_sorted_2):- search_position_sorted([1,2,3,4,5],3,left,2).
+test(search_position_sorted_3):- search_position_sorted([1,2,3,4,5],3,right,3).
+test(search_position_sorted_4):- search_position_sorted([[1,2,3,4,5],[1,2,3,4,5]],3,right,[3,3]).
+test(search_position_sorted_5):- search_position_sorted([[1,2,3,4,5],[1,2,3,4,5]],[3,3],right,[[3,3],[3,3]]).
+:- end_tests(search_position_sorted).
