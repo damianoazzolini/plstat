@@ -2,7 +2,7 @@
 :- use_module(library(plunit)).
 
 :- set_random(seed(100)).
-:- ['../src/plstat'].
+:- ['../prolog/plstat'].
 
 test_list([
     mean,
