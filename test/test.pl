@@ -1,4 +1,4 @@
-:- module(test_plstat, [test/0,test_plstat_rev/0]).
+:- module(test_plstat, [test_plstat/0]).
 :- use_module(library(plunit)).
 
 :- set_random(seed(100)).
@@ -52,7 +52,7 @@ test_list([
     search_position_sorted
   ]).
 
-test:-
+test_plstat:-
     test_list(L),
     length(L,N),
     write('Testing '), write(N), writeln(' predicates'),
