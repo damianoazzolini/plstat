@@ -136,6 +136,8 @@ test(covariance_1):- covariance([5,12,18,23,45],[2,8,18,20,28],146.1).
 
 :- begin_tests(correlation, []).
 test(correlation_1):- correlation([5,12,18,23,45],[2,8,18,20,28],C),close_to(C,0.9366).
+test(spearman_correlation_1):- spearman_correlation([5,12,18,23,45],[2,8,18,20,28],C), close_to(C,0.999999). 
+test(spearman_correlation_2):- spearman_correlation([5,12,18,23,45],[29,8,18,20,40],C), close_to(C,0.399999). 
 :- end_tests(correlation).
 
 :- begin_tests(weighted_mean, []).
