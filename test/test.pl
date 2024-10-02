@@ -250,17 +250,17 @@ test(entropy_2):- entropy([1/2,1/2],[9/10,1/10],E), close_to(E,0.5108256).
 
 :- begin_tests(delete_nth, []).
 test(delete_nth_1):- delete_nth([1,2,7,4],3,[1,2,4]).
-test(delete_nth_2):- \+ delete_nth([1,2,7,4],-3,_).
+test(delete_nth_2, fail):- delete_nth([1,2,7,4],-3,_).
 test(delete_nth_3):- delete_nth([1,2,4,7,8,9],4,[1,2,4,8,9]).
-test(delete_nth_4):- \+ delete_nth([1,2,4,7,8,9],7,_).
+test(delete_nth_4, fail):- delete_nth([1,2,4,7,8,9],7,_).
 test(delete_nth_5):- delete_nth([[1,2,7,4],[1,2,7]],3,[[1,2,4],[1,2]]).
-test(delete_nth_6):- \+delete_nth([[1,2,7,4],[2,7]],3,_).
+test(delete_nth_6, fail):- delete_nth([[1,2,7,4],[2,7]],3,_).
 :- end_tests(delete_nth).
 
 :- begin_tests(normalize_prob, []).
 test(normalize_prob_1):- normalize_prob([0.07,0.14,0.07],L), LC = [0.25,0.5,0.25], maplist(close_to,L,LC).
-test(normalize_prob_2):- \+ normalize_prob([-0,1.14,0.07],_).
-test(normalize_prob_3):- \+ normalize_prob([0.3,-0.14,0.07],_).
+test(normalize_prob_2, fail):- normalize_prob([-0,1.14,0.07],_).
+test(normalize_prob_3, fail):- normalize_prob([0.3,-0.14,0.07],_).
 :- end_tests(normalize_prob).
 
 :- begin_tests(sample, []).
