@@ -6,7 +6,8 @@
 ### Mean
 `mean(+List:number,-Mean:float)`
 
-`Mean` is the mean of the list `List`. `List` can also be multidimensional (list of lists).
+`Mean` is the mean of the list `List`.
+`List` can also be multidimensional (list of lists).
 
 ```
 mean([1,2,3],M).
@@ -19,7 +20,8 @@ mean([[1,3,4],[7,67]],L).
 ### Median
 `median(+List:number,-Median:number)`
 
-`Median` is the median of the list `List`. `List` can also be multidimensional (list of lists)
+`Median` is the median of the list `List`.
+`List` can also be multidimensional (list of lists).
 ```
 median([1,2,3],M).
 % Expected: M = 2.
@@ -27,10 +29,12 @@ median([1,2,3],M).
 median([[1,5,64],[27,67]],M).
 % Expected: M = [5, 47].
 ```
+
 ### Mode
 `mode(+List:number,-Mode:list)`
 
-`Mode` is the mode of the list `List`. `List` can also be multidimensional (list of lists)
+`Mode` is the mode of the list `List`.
+`List` can also be multidimensional (list of lists).
 ```
 mode([1,2,3,1],M).
 % Expected: M = 1.
@@ -42,9 +46,13 @@ mode([[1,5,64],[27,67]],M).
 ### Percentile  
 `percentile(+List:number,+K:number,-Percentile:number)`
 
-`Percentile` is the `K`-th percentile of the list `List`. Both `List` and `K` can be multidimensional (lists of lists).
+`Percentile` is the `K`-th percentile of the list `List`.
+Both `List` and `K` can be multidimensional (lists of lists).
 
-Algorithm: arrange the data in ascending order, compute `r = (p/100)*  (n-1) + 1` where `p` is the percentile. If `r` is integer, then the r-th element is the desired percentile. Otherwise, it is `x_ceil(r) + (r - ceil(r))  (x_(ceil(r)+ 1) - x_ceil(r))`. The last formula is valid in both cases.
+Algorithm: arrange the data in ascending order, compute `r = (p/100)*  (n-1) + 1` where `p` is the percentile.
+If `r` is integer, then the r-th element is the desired percentile.
+Otherwise, it is `x_ceil(r) + (r - ceil(r))  (x_(ceil(r)+ 1) - x_ceil(r))`.
+The last formula is valid in both cases.
 ```
 percentile([1,2,3,4,6,5,9],40,P).
 % Expected: P = 3.4.
@@ -58,27 +66,33 @@ percentile([1,2,3,4,6,5],[10,40],P)
 percentile([[1,2,3,4,6,5],[15,25]],[10,40],P).
 % Expected: P = [[1.5,3.0],[16.0,19.0]].
 ```
+
 ### Quartile
 `quartile(+List:number,+Q:number,-Quartile:number)`
   
-`Quartile` is the `Q` quartile of the list `List`. Both `List` and `Q` can be multidimensional (lists of lists). Wrapper for percentile.
+`Quartile` is the `Q`-th quartile of the list `List`.
+Both `List` and `Q` can be multidimensional (lists of lists).
+Wraps for `percentile/3`.
 ```
-  Example: quartile([15,25],2,Q).
-  Expected: Q = 20.
+quartile([15,25],2,Q).
+% Expected: Q = 20.
 ```
 
 ### Inter quartile range  
 `iqr(+List:number,-IQR:number)`
 
-`IQR` is the inter quartile range of list `List`, computed as the difference between 3rd - 1st quartile. `List` can also be multidimensional (list of lists).
+`IQR` is the inter quartile range of list `List`, computed as the difference between 3rd - 1st quartile.
+`List` can also be multidimensional (list of lists).
 ```
 iqr([1,2,3,4,6,5],I).
 % Expected: I = 2.5.
 ```
+
 ### RMS
 `rms(+List:number,-RMS:number)`
 
-`RMS` is the root mean square of the list `List`. `List` can also be multidimensional (list of lists).
+`RMS` is the root mean square of the list `List`.
+`List` can also be multidimensional (list of lists).
 Square root of the sum of the squared data values divided by the number of values.
 ```
 rms([1,5,8,3],S).
@@ -88,17 +102,20 @@ rms([1,5,8,3],S).
 ### Sum of squares
 `sum_of_squares(+List:number,-SumOfSquares:number)`
 
-`SumOfSquares` is the sum of squares of the list `List`. `List` can also be multidimensional (list of lists).
-Formula: \sum_n (x - \mu)^2
+`SumOfSquares` is the sum of squares of the list `List`.
+`List` can also be multidimensional (list of lists).
+Formula: \sum_n (x - \mu)^2.
 ```
 sum_of_squares([1,2,3],S)
 % Expected: S = 2.
 ```
+
 ### Variance
 `variance(+List:number,-Variance:number)`
 
-`Variance` is the sample variance of the list `List`. `List` can also be multidimensional (list of lists).
-Formula: (1/(N - 1))  \sum_n (x_i - \mu)^2
+`Variance` is the sample variance of the list `List`.
+`List` can also be multidimensional (list of lists).
+Formula: (1/(N - 1))  \sum_n (x_i - \mu)^2.
 ```
 variance([1,2,4,6,7,8,9],V).
 % Expected: V = 9.2380952.
@@ -107,8 +124,9 @@ variance([1,2,4,6,7,8,9],V).
 ### Population variance
 `pop_variance(+List:number,-Variance:number)`
 
-`Variance` is the population variance of the list `List`. `List` can also be multidimensional (list of lists).
-Formula: (1/N)  \sum_n (x_i - \mu)^2
+`Variance` is the population variance of the list `List`.
+`List` can also be multidimensional (list of lists).
+Formula: (1/N)  \sum_n (x_i - \mu)^2.
 ```
 pop_variance([1,4,6,72,1],V).
 % Expected: V = 765.3600.
@@ -127,7 +145,8 @@ Expected: S = 3.039424.
 ### Population standard deviation
 `pop_std_dev(+List:numbers,-StdDev:number)`
 
-`StdDev` is the population standard deviation of the list `List` (square root of the population variance). `List` can also be multidimensional (list of lists).
+`StdDev` is the population standard deviation of the list `List` (square root of the population variance).
+`List` can also be multidimensional (list of lists).
 ```
 pop_std_dev([1,2,4,6,7,8,9],S).
 % Expected: S = 3.039424.
@@ -136,8 +155,8 @@ pop_std_dev([1,2,4,6,7,8,9],S).
 ### Range
 `range(+List:numbers,-Range:number)`
 
-`Range` is the difference between the biggest and the smallest
-element of the list `List`. `List` can also be multidimensional (list of lists).
+`Range` is the difference between the biggest and the smallest element of the list `List`.
+`List` can also be multidimensional (list of lists).
 ```
 range([1,2,4,6,7,8,9],R).
 % Expected: R = 8.
@@ -146,7 +165,8 @@ range([1,2,4,6,7,8,9],R).
 ### Midrange
 `midrange(+List:numbers,-Midrange:number)`
 
-`Midrange` is (Max - Min) / 2 of the list List (half of the range). `List` can also be multidimensional (list of lists).
+`Midrange` is (max - min) / 2 of the list `List` (half of the range).
+`List` can also be multidimensional (list of lists).
 ```
 midrange([1,2,4,6,7,8,9],M).
 % Expected: M = 4.
@@ -156,7 +176,8 @@ midrange([1,2,4,6,7,8,9],M).
 `mean_absolute_deviation(+List:numbers,-MAS:number)`
 
 `MAD` is the sum of the absolute value of the differences between data values and the mean, divided by the sample size.
-Formula: MAD = 1/N  \sum_i |x - \mu|. `List` can also be multidimensional (list of lists).
+Formula: MAD = 1/N  \sum_i |x - \mu|.
+`List` can also be multidimensional (list of lists).
 ```
 mean_absolute_deviation([1,2,4,6,7,8,9],M).
 % Expected: M = 2.5306122.
@@ -190,7 +211,8 @@ spearman_correlation([5,12,18,23,45],[2,8,18,20,28],C).
 ### Weighted mean
 `weighted_mean(+List:numbers,+Weights:numbers,-WM:number)`
 
-`WM` is the weighted mean of the list `List`: \sum x_iw_i / \sum w_i.
+`WM` is the weighted mean of the list `List`.
+Formula: \sum x_iw_i / \sum w_i.
 ```
 weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],WM).
 % Expected: WM = 19.1972.
@@ -199,7 +221,9 @@ weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],WM).
 ### Harmonic mean
 `harmonic_mean(+List:numbers,-HM:number)`
 
-`HM` is the harmonic mean of list `List`. Formula: n / (1/x1 + 1/x2 + ... + 1/xn). `List` can also be multidimensional (list of lists).
+`HM` is the harmonic mean of list `List`.
+Formula: n / (1/x1 + 1/x2 + ... + 1/xn).
+`List` can also be multidimensional (list of lists).
 ```
 harmonic_mean([1,2,3,4,5,6,7],HM).
 Expected: HM = 2.69972
@@ -208,9 +232,7 @@ Expected: HM = 2.69972
 ### Trimmed mean
 `trimmed_mean(+List:numbers,+Lower:number,+Upper:number,-TM:number)`
 
-`TM` is the trimmed mean of the list `List`, i.e., 
-the mean computed by considering only numbers 
-in the range [Lower,Upper].
+`TM` is the trimmed mean of the list `List`, i.e., the mean computed by considering only numbers in the range [Lower,Upper].
 ```
 trimmed_mean([1,2,3,4,5,6,7],3,5,T).
 % Expected: T = 4
@@ -228,16 +250,18 @@ trimmed_variance([1,2,3,4,5,6,7],3,5,V).
 ### Moment
 `moment(+List:numbers,+M:integer,-Moment:number)`
 
-`Moment` is the M-th moment about the mean for the list `List`. Formula: 1/n \sum (x_i - x_mean) ^ M.
+`Moment` is the M-th moment about the mean for the list `List`.
+Formula: 1/n \sum (x_i - x_mean) ^ M.
 ```
 moment([1,2,3,4,5],2,MO).
-Expected: MO = 2
+% Expected: MO = 2
 ```
 
 ### Skew
 `skew(+List:numbers,-Skew:number)`
 
-`Skew` is the sample skewness of list `List`. Formula: m_3 / (m_2)^(3/2). `List` can also be multidimensional (list of lists).
+`Skew` is the sample skewness of list `List`. Formula: m_3 / (m_2)^(3/2).
+`List` can also be multidimensional (list of lists).
 ```
 skew([2,8,0,4,1,9,9,0],S).
 % Expected: S = 0.26505541
@@ -246,8 +270,8 @@ skew([2,8,0,4,1,9,9,0],S).
 ### Kurtosis
 `kurtosis(+List:numbers,-Kurtosis:number)`
 
-`Kurtosis` is the fourth central moment divided by 
-the square of the variance. `List` can also be multidimensional (list of lists).
+`Kurtosis` is the fourth central moment divided by the square of the variance.
+`List` can also be multidimensional (list of lists).
 ```
 kurtosis([3,5,7,2,7],K).
 % Expected: K = 1.3731508875.
@@ -258,13 +282,14 @@ kurtosis([3,5,7,2,7],K).
 
 `rank(+List:numbers,+Method:atom,-RankList:number)`
 
-`RankList` is the rank of the list `List` according to method `Method`. If `Method` is not provided, by default it performs 
-average/fractional ranking. `Method` must be one of the following:
+`RankList` is the rank of the list `List` according to method `Method`.
+If `Method` is not provided, by default it performs average/fractional ranking.
+`Method` must be one of the following:
 - `average` or `fractional`: items that compare equal receive the same rank, which is the mean of ordinal ranking values (see below)
 - `min` or `competition`: items that compare equal receive the same rank (there will be a gap in the ranking list)
 - `max` or `modified_competition`: as `min`, but the gap is left before, rather than after
 - `dense`: as `min`, but no gaps are left
-- `ordinal`: all the elements receive a different rank. If the same element appears more than one time, all the occurrences will have a different (increasing) rank.
+- `ordinal`: all the elements receive a different rank. If the same element appears more than one time, all the occurrences will have a different (increasing) rank
 ```
 rank([0,2,3,2],R).
 % Expected: R = [1.0,2.5,4.0,2.5].
@@ -318,8 +343,7 @@ Expected: R = [[1,3],[2,6],[4,7]].
 ### Split n parts
 `split_n_parts(+List:numbers,+Parts:number,-PartsList:numbers)`
 
-`PartsList` is a list of lists obtained by splitting list List
-in `Parts` parts.
+`PartsList` is a list of lists obtained by splitting list `List` in `Parts` parts.
 ```
 split_n_parts([1,2,4,3,7,6],2,[[1,2],[4,3],[7,6]]).
 % Expected: S = [[1,2],[4,3],[7,6]].
@@ -330,7 +354,7 @@ split_n_parts([1,2,4,3,7,6],2,[[1,2],[4,3],[7,6]]).
 
 `occurrences(+Number:number,+List:numbers,-Occ:list)`
 
-`Occ` is the occurrences of `Number` in list List.
+`Occ` is the occurrences of `Number` in list `List`.
 If `Number` is not provided, `Occ` is a list [Value,Occurrences] for each element in list `List`.
 ```
 occurrences([1,2,4,6,7,8,9,1],O).
@@ -343,7 +367,8 @@ occurrences([1,2,4,6,7,8,9,1],1,O).
 ### Min value
 `min_val(+List:numbers,-Min:number)`
   
-`Min` is the smallest value of the list `List`. List can also be multidimensional (list of lists).
+`Min` is the smallest value of the list `List`.
+`List` can also be multidimensional (list of lists).
 ```
 min_val([1,2,4,6,7,8,9,1],M).
 % Expected: M = 1.
@@ -352,7 +377,7 @@ min_val([1,2,4,6,7,8,9,1],M).
 ### Max value
 `max_val(+List:numbers,-Max:number)`
 
-`Max` is the biggest value of the list List.
+`Max` is the biggest value of the list `List`.
 `List` can also be multidimensional (list of lists).
 ```
 max_val([1,2,4,6,7,8,9,1],M).
@@ -409,7 +434,7 @@ normalize_prob([0.07,0.14,0.07],L).
 Also known as min-max normalization.
 `List` can also be multidimensional (list of lists).
 If `Lower` and `Upper` are not provided, they are set by default to 0 and 1.
-Every x is rescaled as Lower + ((x - min_list)(Upper - Lower)) / (max_list - min_list)
+Every x is rescaled as: Lower + ((x - min_list)(Upper - Lower)) / (max_list - min_list)
 ```
 rescale([0.07,0.14,0.07],L).
 % Expected: L = [0.0,1.0,0.0]
@@ -447,7 +472,7 @@ standardize([1,2,4],L).
 `entropy(+List:numbers,+Probabilities:number,-Entropy:number)`
 
 `Entropy` is the entropy of the list `List`.
-Formula: is probabilities are not provided, then 
+Formula: if probabilities are not provided, then 
 E = -sum(pk  log(pk))
 else
 E = sum(pk  log(pk / qk))
@@ -479,7 +504,7 @@ delete_nth1([1,2,7,4],3,L).
 Takes a sample of size `Size` from list `List`.
 Replace can be true or false, if not provided is false.
 Probabilities is a list of probabilities.
-If `Replace` is false and a list of probabilities is specified, the list is normalized, after the removal of the element 
+If `Replace` is false and a list of probabilities is specified, the list is normalized, after the removal of the element. 
 ```
 sample([1,2,3,4,5],5,L).
 sample([1,2,3,4,5],5,true,L).
@@ -532,7 +557,7 @@ factorial(10,F).
 `choose(+N:int,+K:int,-C:int)`
   
 `C` is the binomial coefficient `N,K`
-fact(N) / (fact(N-K)  fact(K))
+Formula: fact(N) / (fact(N-K)  fact(K))
 ```
 choose(10,3,C).
 % Expected: C = 120.
@@ -544,7 +569,9 @@ choose(10,3,C).
 `search_position_sorted(+List:numbers,+Element:number,+Direction:term,-Pos:integer)`
 
 `Pos` is the position that the element `Element` would have when inserted in list `List` to preserve its order.
-0 means the first location. If the element should be inserted in the last position, `Pos = N` where `N` is the length of `List`. Counting from 1.
+0 means the first location.
+If the element should be inserted in the last position, `Pos = N` where `N` is the length of `List`.
+Counting from 1.
 `List` and Element can also be multidimensional (lists of lists).
 `Direction` can be left (default) or right.
 ``` 
