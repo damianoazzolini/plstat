@@ -1,6 +1,6 @@
 # PLSTAT - statistics using prolog
 Statistics functionalities written in plain prolog.
-See docs/doc.md for the list of available predicates.
+See `docs/doc.md` for the list of available predicates.
 
 # Installation
 From SWI Prolog:

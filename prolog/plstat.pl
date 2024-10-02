@@ -51,7 +51,7 @@
     occurrences/2,
     occurrences/3,
     normalize_prob/2,
-    delete_nth/3,
+    delete_nth1/3,
     sample/3,
     sample/4,
     sample/5,
@@ -967,23 +967,23 @@ entropy(L,LP,E):-
     sum(P,E).
 
 /**
- * delete_nth(+List:numbers,+Index:numbers,-LDeleted:number)
+ * delete_nth1(+List:numbers,+Index:numbers,-LDeleted:number)
  * LDeleted is List with the element at pos Index removed, counting from 1
  * If Index is greater than the length of the list, fails
- * Example: delete_nth([1,2,7,4],3,L).
+ * Example: delete_nth1([1,2,7,4],3,L).
  * Expected: L = [1,2,4].
  * */
-delete_nth(L,N,LDeleted):-
+delete_nth1(L,N,LDeleted):-
     L = [A|_],
     (is_list(A) ->
-        maplist(delete_nth_(N),L,LDeleted) ;
-        delete_nth_(N,L,LDeleted)
+        maplist(delete_nth1_(N),L,LDeleted) ;
+        delete_nth1_(N,L,LDeleted)
     ).
-delete_nth_(1,[_|T],T):- !.
-delete_nth_(Nth,[H|T],[H|T1]):-
+delete_nth1_(1,[_|T],T):- !.
+delete_nth1_(Nth,[H|T],[H|T1]):-
     Nth > 1,
 	N is Nth-1,
-    delete_nth_(N,T,T1).
+    delete_nth1_(N,T,T1).
 
 /**
  * sample(+List:elements,+Size:number,-Result:list)
@@ -1007,7 +1007,7 @@ sample_list(L,N,Replace,[H|T]):-
     nth1(R,L,H),
     ( Replace = true ->
         L1 = L ;
-        delete_nth(L,R,L1)
+        delete_nth1(L,R,L1)
     ),
     N1 is N - 1,
     sample_list(L1,N1,Replace,T).
@@ -1030,8 +1030,8 @@ sample_list_prob(L,Size,Replace,[HP|TP],[Out|TOut]):-
     ( Replace = true ->
         L1 = L,
         PL = [HP|TP] ;
-        delete_nth(L,Index,L1),
-        delete_nth([HP|TP],Index,PTemp),
+        delete_nth1(L,Index,L1),
+        delete_nth1([HP|TP],Index,PTemp),
         normalize_prob(PTemp,PL)
     ),
     S1 is Size - 1,

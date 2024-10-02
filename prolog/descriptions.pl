@@ -1,1 +1,0 @@
-% fatti description(predicate,[Description]).

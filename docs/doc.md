@@ -1,5 +1,5 @@
 # List of available predicates
-`bug/0`, `list/0`, `suggestion/0`, `mean/2`, `median/2`, `mode/2`, `percentile/3`, `quartile/3`, `iqr/2`, `rms/2`, `sum_of_squares/2`, `variance/2`, `pop_variance/2`, `std_dev/2`, `pop_std_dev/2`, `range/2`, `midrange/2`, `mean_absolute_deviation/2`, `covariance/3`, `correlation/3`, `pearson_correlation/3`, `spearman_correlation/3`, `weighted_mean/3`, `harmonic_mean/2`, `trimmed_mean/4`, `trimmed_variance/4`, `skew/2`, `kurtosis/2`, `moment/3`, `sum/2`, `prod/2`, `rescale/2`, `rescale/4`, `mean_normalize/2`, `standardize/2`, `entropy/2`, `entropy/3`, `min_val/2`, `max_val/2`, `min_max_val/3`, `rank/2`, `rank/3`, `nth_row/3`, `nth_column/3`, `swap_rows_columns/2`, `split_n_parts/3`, `occurrences/2`, `occurrences/3`, `normalize_prob/2`, `delete_nth/3`, `sample/3`, `sample/4`, `sample/5`, `empirical_distribution/3`, `seq/4`, `factorial/2`, `choose/3`, `search_position_sorted/3`, `search_position_sorted/4`.
+`bug/0`, `list/0`, `suggestion/0`, `mean/2`, `median/2`, `mode/2`, `percentile/3`, `quartile/3`, `iqr/2`, `rms/2`, `sum_of_squares/2`, `variance/2`, `pop_variance/2`, `std_dev/2`, `pop_std_dev/2`, `range/2`, `midrange/2`, `mean_absolute_deviation/2`, `covariance/3`, `correlation/3`, `pearson_correlation/3`, `spearman_correlation/3`, `weighted_mean/3`, `harmonic_mean/2`, `trimmed_mean/4`, `trimmed_variance/4`, `skew/2`, `kurtosis/2`, `moment/3`, `sum/2`, `prod/2`, `rescale/2`, `rescale/4`, `mean_normalize/2`, `standardize/2`, `entropy/2`, `entropy/3`, `min_val/2`, `max_val/2`, `min_max_val/3`, `rank/2`, `rank/3`, `nth_row/3`, `nth_column/3`, `swap_rows_columns/2`, `split_n_parts/3`, `occurrences/2`, `occurrences/3`, `normalize_prob/2`, `delete_nth1/3`, `sample/3`, `sample/4`, `sample/5`, `empirical_distribution/3`, `seq/4`, `factorial/2`, `choose/3`, `search_position_sorted/3`, `search_position_sorted/4`.
 
 # Predicates details
 
@@ -448,9 +448,9 @@ standardize([1,2,4],L).
 
 `Entropy` is the entropy of the list `List`.
 Formula: is probabilities are not provided, then 
-E = -sum(pk  log(pk)
+E = -sum(pk  log(pk))
 else
-E = sum(pk  log(pk / qk)
+E = sum(pk  log(pk / qk))
 Logarithm in base e (natural logarithm) is computed.
 ```
 entropy([9/10,1/10],E).
@@ -461,12 +461,12 @@ entropy([1/2,1/2],[9/10,1/10],E).
 ```
 
 ### Delete nth
-`delete_nth(+List:numbers,+Index:numbers,-LDeleted:number)`
+`delete_nth1(+List:numbers,+Index:numbers,-LDeleted:number)`
 
 `LDeleted` is List with the element at pos `Index` removed, counting from 1.
 If Index is greater than the length of the list, fails.
 ```
-delete_nth([1,2,7,4],3,L).
+delete_nth1([1,2,7,4],3,L).
 % Expected: L = [1,2,4].
 ```
 

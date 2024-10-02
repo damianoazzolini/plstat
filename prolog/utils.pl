@@ -47,7 +47,7 @@ topic(swap_rows_columns/2,utils).
 topic(split_n_parts/3,utils).
 topic(occurrences/2/3,utils).
 topic(normalize_prob/2,utils).
-topic(delete_nth/3,utils).
+topic(delete_nth1/3,utils).
 topic(sample/3/4/5,statistics).
 topic(empirical_distribution/3,statistics).
 
@@ -55,8 +55,6 @@ topic(seq/4,utils).
 topic(factorial/2,utils).
 topic(choose/3,utils).
 topic(search_position_sorted/3/4,utils).
-
-:- [descriptions].
 
 /**
  * bug/0: print information to report bugs.
