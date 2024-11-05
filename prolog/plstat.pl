@@ -104,7 +104,8 @@ median([],0):- !.
 median([E],E):- number(E), !.
 median(L,Median):-
     multidim2(median_,L,Median).
-median_(L,Median):-
+median_(Lin,Median):-
+    msort(Lin,L),
 	length(L,N),
     (1 is N mod 2 ->
         N1 is N + 1,

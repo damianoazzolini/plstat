@@ -73,7 +73,9 @@ test(mean_2):- mean([[1,3,4],[7,67]],[2.6666666666666665,37]).
 :- begin_tests(median, []).
 test(median_1):- median([1,2,3],2).
 test(median_2):- median([1,2,3,4],2.5).
+test(median_2_unsorted):- median([1,2,4,3],2.5).
 test(median_3):- median([[1,5,64],[27,67]],[5,47]).
+test(median_4):- median([1,1,2,6,6,9],4).
 :- end_tests(median).
 
 :- begin_tests(mode, []).
