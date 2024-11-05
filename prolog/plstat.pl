@@ -65,17 +65,11 @@
 
 :- [utils].
 
-eval_fraction_list(LF,LE):-
-    maplist(eval_fraction,LF,LE).
-eval_fraction(F,E):-
-    E is F.
 % multidimensional wrapper
 multidim2(Predicate,List,Res):-
     ( List = [A|_], is_list(A) ->
-        maplist(eval_fraction_list,List,L),
-        maplist(Predicate,L,Res);
-        maplist(eval_fraction,List,L),
-        Call =.. [Predicate,L,Res],
+        maplist(Predicate,List,Res);
+        Call =.. [Predicate,List,Res],
         Call
     ).
 
@@ -950,8 +944,7 @@ entropy(L,E):-
     sum(PR,S),
     E is -S.
 entropy(L,LP,E):-
-    eval_fraction_list(LP,LPP),
-    sum(LPP,S),
+    sum(LP,S),
     ( S \= 1.0 ->
         writeln("Probabilities must sum to 1"), 
         false;
