@@ -8,13 +8,47 @@
 
 `Mean` is the mean of the list `List`.
 `List` can also be multidimensional (list of lists).
+Fails with a message if list is empty of if one of the lists
+of the list of lists is empty.
 
 ```
 mean([1,2,3],M).
 % Expected: M = 2.
 
 mean([[1,3,4],[7,67]],L).
-% Expected: [2.666,37].
+% Expected: L = [2.666,37].
+```
+
+### Weighted mean
+`weighted_mean(+List:numbers,+Weights:numbers,-WM:number)`
+
+`WM` is the weighted mean of the list `List`.
+Formula: \sum x_iw_i / \sum w_i.
+Weights must be positive and shoud sum to a value > 0.
+
+```
+weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],WM).
+% Expected: WM = 19.1972.
+```
+
+### Harmonic mean
+`harmonic_mean(+List:numbers,-HM:number)`
+
+`HM` is the harmonic mean of list `List`.
+Formula: n / (1/x1 + 1/x2 + ... + 1/xn).
+`List` can also be multidimensional (list of lists).
+```
+harmonic_mean([1,2,3,4,5,6,7],HM).
+Expected: HM = 2.69972
+```
+
+### Trimmed mean
+`trimmed_mean(+List:numbers,+Lower:number,+Upper:number,-TM:number)`
+
+`TM` is the trimmed mean of the list `List`, i.e., the mean computed by considering only numbers in the range [Lower,Upper].
+```
+trimmed_mean([1,2,3,4,5,6,7],3,5,T).
+% Expected: T = 4
 ```
 
 ### Median
@@ -22,6 +56,9 @@ mean([[1,3,4],[7,67]],L).
 
 `Median` is the median of the list `List`.
 `List` can also be multidimensional (list of lists).
+Fails with a message if list is empty of if one of the lists
+of the list of lists is empty.
+
 ```
 median([1,2,3],M).
 % Expected: M = 2.
@@ -35,6 +72,11 @@ median([[1,5,64],[27,67]],M).
 
 `Mode` is the mode of the list `List`.
 `List` can also be multidimensional (list of lists).
+Fails with a message if list is empty of if one of the lists
+of the list of lists is empty.
+If the list contains multiple modes with the same frequency,
+it computes all.
+
 ```
 mode([1,2,3,1],M).
 % Expected: M = 1.
@@ -206,36 +248,6 @@ correlation([5,12,18,23,45],[2,8,18,20,28],C).
 
 spearman_correlation([5,12,18,23,45],[2,8,18,20,28],C).
 % Expected: C = 0.999999
-```
-
-### Weighted mean
-`weighted_mean(+List:numbers,+Weights:numbers,-WM:number)`
-
-`WM` is the weighted mean of the list `List`.
-Formula: \sum x_iw_i / \sum w_i.
-```
-weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],WM).
-% Expected: WM = 19.1972.
-```
-
-### Harmonic mean
-`harmonic_mean(+List:numbers,-HM:number)`
-
-`HM` is the harmonic mean of list `List`.
-Formula: n / (1/x1 + 1/x2 + ... + 1/xn).
-`List` can also be multidimensional (list of lists).
-```
-harmonic_mean([1,2,3,4,5,6,7],HM).
-Expected: HM = 2.69972
-```
-
-### Trimmed mean
-`trimmed_mean(+List:numbers,+Lower:number,+Upper:number,-TM:number)`
-
-`TM` is the trimmed mean of the list `List`, i.e., the mean computed by considering only numbers in the range [Lower,Upper].
-```
-trimmed_mean([1,2,3,4,5,6,7],3,5,T).
-% Expected: T = 4
 ```
 
 ### Trimmed variance

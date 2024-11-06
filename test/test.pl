@@ -66,22 +66,33 @@ close_to(V,V1):-
 
 % statistics
 :- begin_tests(mean, []).
-test(mean_1):- mean([1,2,3],2).
-test(mean_2):- mean([[1,3,4],[7,67]],[2.6666666666666665,37]).
+test(mean_0, [fail]):- mean([], _).
+test(mean_0_multidim, [fail]):- mean([[],[]], _).
+test(mean_1_multidim, [fail]):- mean([[1],[]], _).
+test(mean_1):- mean([1], M), M =:= 1.
+test(mean_2):- mean([1,2,3], M), M =:= 2.
+test(mean_3_multidim):- mean([[1,3,4],[7,67]], M), ground(M), M = [A,37], close_to(A,2.666666).
 :- end_tests(mean).
 
 :- begin_tests(median, []).
-test(median_1):- median([1,2,3],2).
-test(median_2):- median([1,2,3,4],2.5).
-test(median_2_unsorted):- median([1,2,4,3],2.5).
-test(median_3):- median([[1,5,64],[27,67]],[5,47]).
-test(median_4):- median([1,1,2,6,6,9],4).
+test(median_0, [fail]):- median([], _).
+test(median_0_multidim, [fail]):- median([[],[]], R), ground(R), R = [0,0].
+test(median_1_1):- median([1], R), R =:= 1.
+test(median_1):- median([1,2,3], R), R =:= 2.
+test(median_2):- median([1,2,3,4], R), R =:= 2.5.
+test(median_2_unsorted):- median([1,2,4,3], R), R =:= 2.5.
+test(median_3):- median([[1,5,64],[27,67]], R), ground(R), R = [5,47].
+test(median_4):- median([1,1,2,6,6,9],R), R =:= 4.
 :- end_tests(median).
 
 :- begin_tests(mode, []).
-test(mode_1):- mode([1,2,3,1],1).
-test(mode_2):- mode([1,2,3,4],[1,2,3,4]).
-test(mode_3):- mode([[1,5,64],[27,67]],[[1,5,64],[27,67]]).
+test(mode_0, [fail]):- mode([], _).
+test(mode_0_multidim, [fail]):- mode([[],[]], _).
+test(mode_1):- mode([1,2,3,1],M), M =:= 1.
+test(mode_1_det):- mode([1,5,1],M), M =:= 1.
+test(mode_2):- mode([1,2,3,4], L), ground(L), L = [1,2,3,4].
+test(mode_3):- mode([[1,5,64],[27,67]], L), ground(L), L = [[1,5,64],[27,67]].
+test(mode_4):- mode([[1,1,64],[27,67]], L), ground(L), L = [1,[27,67]].
 :- end_tests(mode).
 
 :- begin_tests(percentile, []).
@@ -97,14 +108,14 @@ test(rms_2):- rms([[1,5,64],[27,67]],M), L = [37.067505985701274, 51.07837115648
 :- end_tests(rms).
 
 :- begin_tests(sum_of_squares, []).
-test(sum_of_squares_1):- sum_of_squares([1,2,3],2).
-test(sum_of_squares_2):- sum_of_squares([1,2,3,46],1454).
-test(sum_of_squares_3):- sum_of_squares([[1,5,66],[27,67]],[2654,800]).
+test(sum_of_squares_1):- sum_of_squares([1,2,3], R), R =:= 2.
+test(sum_of_squares_2):- sum_of_squares([1,2,3,46], R), R =:= 1454.
+test(sum_of_squares_3):- sum_of_squares([[1,5,66],[27,67]], R), ground(R), R = [2654,800].
 :- end_tests(sum_of_squares).
 
 :- begin_tests(variance, []).
 test(variance_1):- variance([1,2,4,6,7,8,9],V),close_to(V,9.2380952).
-test(variance_2):- variance([1,4,6,72,1],956.7).
+test(variance_2):- variance([1,4,6,72,1], V), V =:= 956.7.
 :- end_tests(variance).
 
 :- begin_tests(pop_variance, []).
@@ -121,11 +132,11 @@ test(std_dev_1):- pop_std_dev([1,2,4,6,7,8,9],S),close_to(S,2.8139594).
 :- end_tests(pop_std_dev).
 
 :- begin_tests(range, []).
-test(range_1):- range([1,2,4,6,7,8,9],8).
+test(range_1):- range([1,2,4,6,7,8,9], R), R =:= 8.
 :- end_tests(range).
 
 :- begin_tests(midrange, []).
-test(midrange_1):- midrange([1,2,4,6,7,8,9],4).
+test(midrange_1):- midrange([1,2,4,6,7,8,9], R), R =:= 4.
 :- end_tests(midrange).
 
 :- begin_tests(mean_absolute_deviation, []).
@@ -133,7 +144,7 @@ test(mean_absolute_deviation_1):- mean_absolute_deviation([1,2,4,6,7,8,9],M),clo
 :- end_tests(mean_absolute_deviation).
 
 :- begin_tests(covariance, []).
-test(covariance_1):- covariance([5,12,18,23,45],[2,8,18,20,28],146.1).
+test(covariance_1):- covariance([5,12,18,23,45],[2,8,18,20,28], R), R =:= 146.1.
 :- end_tests(covariance).
 
 :- begin_tests(correlation, []).
@@ -143,6 +154,13 @@ test(spearman_correlation_2):- spearman_correlation([5,12,18,23,45],[29,8,18,20,
 :- end_tests(correlation).
 
 :- begin_tests(weighted_mean, []).
+test(weighted_mean_00, [fail]):- weighted_mean([27],[2,8,10,13,18,20],_).
+test(weighted_mean_01, [fail]):- weighted_mean([2,8,10,13,18,20],[27],_).
+test(weighted_mean_02, [fail]):- weighted_mean([2,8,10,13,18,20],[_],_).
+test(weighted_mean_03, [fail]):- weighted_mean([2,8,10,13,_,20],[20],_).
+test(weighted_mean_04, [fail]):- weighted_mean([3,8,10,17,_,27],[2,8,10,13,18,20],_).
+test(weighted_mean_05, [fail]):- weighted_mean([3,8,10,17,12,27],[-2,8,10,13,18,20],_).
+test(weighted_mean_06, [fail]):- weighted_mean([3,8],[0,0],_).
 test(weighted_mean_1):- weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],V),close_to(V,19.1972).
 :- end_tests(weighted_mean).
 

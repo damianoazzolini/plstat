@@ -73,38 +73,63 @@ multidim2(Predicate,List,Res):-
         Call
     ).
 
+ground_and_numbers_and_nonempty(Predicate, L):-
+    ground_list(Predicate,L),
+    numbers(Predicate,L),
+    nonempty(Predicate,L).
+nonempty(Predicate, L):-
+    length(L,N),
+    ( N > 0 -> true ; write(Predicate), writeln(": list cannot be empty"), false).
+ground_list(Predicate, L):-
+    ( ground(L) -> true ; write(Predicate), writeln(": input list must be ground"), false).
+numbers(Predicate, L):- 
+    ( maplist(number,L) -> true ; write(Predicate), writeln(": all the elements must be numbers"), false).
+same_length_lists(Predicate, L1, L2):-
+    length(L1,N),
+    length(L2,M),
+    ( M = N -> true ;
+        write(Predicate), writeln(': input lists must have the same length'),
+        write('Found '), write(M), write(' expected '), writeln(N),
+        false
+    ).
+
+all_positive(Predicate,W):-
+    ( maplist(=<(0),W) -> true ; write(Predicate), writeln(": all the weigths must be positive (> 0)"), false).
+nonzerosum(Predicate,W,Sum):-
+    sum(W,Sum),
+    (Sum > 0 -> true ; write(Predicate), writeln(": weigths must not sum to 0"), false).
+
+
 /**
  * mean(+List:number,-Mean:float)
- * Mean is the mean of the list List
- * List can also be multidimensional (list of lists)
+ * Mean is the mean of the list List.
+ * List can also be multidimensional (list of lists).
  * Example: mean([1,2,3],M).
  * Expected: M = 2.
  * Example: mean([[1,3,4],[7,67]],L).
  * Expected: [2.666,37].
  * */
-mean([],0):- !.
-mean([E],E):- number(E), !.
 mean(L,Mean):-
     multidim2(mean_,L,Mean).
 mean_(L,Mean):-
+    ground_and_numbers_and_nonempty(mean/2,L),
 	length(L,N),
 	sum(L,S),
-	Mean is S/N.
-
+    Mean is S/N.
 /**
  * median(+List:number,-Median:number)
- * Median is the median of the list List
- * List can also be multidimensional (list of lists)
+ * Median is the median of the list List.
+ * List can also be multidimensional (list of lists).
  * Example: median([1,2,3],M).
  * Expected: M = 2.
  * Example: median([[1,5,64],[27,67]],M).
  * Expected: M = [5, 47].
  * */
-median([],0):- !.
-median([E],E):- number(E), !.
+% median([E],E):- number(E), !.
 median(L,Median):-
     multidim2(median_,L,Median).
 median_(Lin,Median):-
+    ground_and_numbers_and_nonempty(median/2,Lin),
     msort(Lin,L),
 	length(L,N),
     (1 is N mod 2 ->
@@ -126,16 +151,15 @@ median_(Lin,Median):-
  * Expected: M = 1.
  * Example: mode([[1,5,64],[27,67]],M).
  * Expected: M = [[1,5,64], [27,67]].
+ * TODO: check this
  * */
 comp(<,[_,A1],[_,A2]) :- A1 > A2. % to have in descending order
 comp(>, _, _).
-mode([],0):- !.
-mode([E],E):- number(E), !.
 mode(L,Mode):-
     multidim2(mode_,L,Mode).
 mode_(L,ModeC):-
 	occurrences(L,Occ),
-    predsort(comp,Occ,X),
+    predsort(comp,Occ,X), !,
     X = [[_,O]|_],
     findall(V,member([V,O],Occ),Mode),
     length(Mode,Mod),
@@ -421,21 +445,29 @@ spearman_correlation(L1,L2,C):-
     rank(L2,fractional,LF2),
     correlation(LF1,LF2,C).
 
+
+/**
+ * geometric_mean(+List:numbers,+Weights:numbers,-GM:number)
+ * GM is the geometric mean of the list List: (\prod x_i)^(1/n)
+ * Example: geometric_mean([54, 24, 36], GM).
+ * Expected: GM = 36.
+ * TODO
+ * */
+
+
 /**
  * weighted_mean(+List:numbers,+Weights:numbers,-WM:number)
  * WM is the weighted mean of the list List: \sum x_i*w_i / \sum w_i
+ * Weights must sum to > 0 and all weights must be positive (> 0).
  * Example: weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],WM).
  * Expected: WM = 19.1972.
  * */
-weighted_mean(L1,L2,_):-
-    length(L1,N),
-    length(L2,M),
-    M \= N,
-    writeln('Lists must be of the same length'),
-    write('Found '), write(N), write(' '), writeln(M),
-    false.
 weighted_mean(List,Weights,WM):-
-    sum(Weights, SW),
+    ground_and_numbers_and_nonempty(weighted_mean/3,List),
+    ground_and_numbers_and_nonempty(weighted_mean/3,Weights),
+    same_length_lists(weighted_mean/3,List,Weights),
+    all_positive(weighted_mean/3,Weights),
+    nonzerosum(weighted_mean/3,Weights,SW),
     maplist(mul,List,Weights,LP),
     sum(LP,LS),
     WM is LS / SW.
