@@ -9,6 +9,8 @@ test_list([
     median,
     mode,
     percentile,
+    quartile,
+    iqr,
     rms,
     sum_of_squares,
     variance,
@@ -96,58 +98,103 @@ test(mode_4):- mode([[1,1,64],[27,67]], L), ground(L), L = [1,[27,67]].
 :- end_tests(mode).
 
 :- begin_tests(percentile, []).
+test(percentile_00, [fail]):- percentile([],40,_).
+test(percentile_01, [fail]):- percentile([],_,_).
+test(percentile_02, [fail]):- percentile([_],1,_).
+test(percentile_03, [fail]):- percentile([1],101,_).
+test(percentile_04, [fail]):- percentile([1],_,_).
+test(percentile_05, [fail]):- percentile([a],_,_).
+test(percentile_06):- percentile([1],100,P), close_to(P,1).
+test(percentile_07):- percentile([1],10,P), close_to(P,1).
+test(percentile_08):- percentile([1],0,P), close_to(P,1).
 test(percentile_1):- percentile([1,2,3,4,6,5,9],40,P), close_to(P,3.4).
 test(percentile_2):- percentile([1,2,3,4,6,5],40,P), close_to(P,3).
 test(percentile_3):- percentile([1,2,3,4,6,5],[10,40],P), L = [1.5,3.0], maplist(close_to,L,P).
 test(percentile_4):- percentile([[1,2,3,4,6,5],[15,25]],[10,40],[PA,PB]), L1 = [1.5,3.0], L2 = [16.0, 19.0], maplist(close_to,L1,PA), maplist(close_to,L2,PB).
 :- end_tests(percentile).
 
+:- begin_tests(quartile, []).
+% light testing since it is a wrapper for percentile/3
+test(quartile_00, [fail]):- quartile([1,2],40,_).
+test(quartile_01, [fail]):- quartile([1,2],-1,_).
+test(quartile_02, [fail]):- quartile([1,2],_,_).
+:- end_tests(quartile).
+
+:- begin_tests(iqr, []).
+% light testing since it is a wrapper for percentile/3
+test(iqr_00, [fail]):- iqr([],_).
+:- end_tests(iqr).
+
 :- begin_tests(rms, []).
+test(rms_00, [fail]):- rms([],_).
+test(rms_01, [fail]):- rms([a],_).
 test(rms_1):- rms([1,5,8,3],V),close_to(V,4.97493).
 test(rms_2):- rms([[1,5,64],[27,67]],M), L = [37.067505985701274, 51.07837115648854], maplist(close_to,M,L).
 :- end_tests(rms).
 
 :- begin_tests(sum_of_squares, []).
+test(sum_of_squares_00, [fail]):- sum_of_squares([],_).
+test(sum_of_squares_01, [fail]):- sum_of_squares([a],_).
 test(sum_of_squares_1):- sum_of_squares([1,2,3], R), R =:= 2.
 test(sum_of_squares_2):- sum_of_squares([1,2,3,46], R), R =:= 1454.
 test(sum_of_squares_3):- sum_of_squares([[1,5,66],[27,67]], R), ground(R), R = [2654,800].
 :- end_tests(sum_of_squares).
 
 :- begin_tests(variance, []).
+test(variance_00, [fail]):- variance([1,2,4,_,7,8,9],_).
+test(variance_01, [fail]):- variance([1],_).
+test(variance_02, [fail]):- variance([],_).
 test(variance_1):- variance([1,2,4,6,7,8,9],V),close_to(V,9.2380952).
-test(variance_2):- variance([1,4,6,72,1], V), V =:= 956.7.
+test(variance_2):- variance([1,4,6,72,1],V), V =:= 956.7.
 :- end_tests(variance).
 
 :- begin_tests(pop_variance, []).
+test(pop_variance_00, [fail]):- pop_variance([1,2,4,_,7,8,9],_).
+test(pop_variance_01, [fail]):- pop_variance([1],_).
+test(pop_variance_02, [fail]):- pop_variance([],_).
 test(pop_variance_1):- pop_variance([1,2,4,6,7,8,9],V),close_to(V,7.9183673).
 test(pop_variance_2):- pop_variance([1,4,6,72,1],V),close_to(V,765.3600).
 :- end_tests(pop_variance).
 
 :- begin_tests(std_dev, []).
+% light testing since it is a wrapper for variance/3
 test(std_dev_1):- std_dev([1,2,4,6,7,8,9],S),close_to(S,3.039424).
 :- end_tests(std_dev).
 
 :- begin_tests(pop_std_dev, []).
+% light testing since it is a wrapper for pop_variance/3
 test(std_dev_1):- pop_std_dev([1,2,4,6,7,8,9],S),close_to(S,2.8139594).
 :- end_tests(pop_std_dev).
 
 :- begin_tests(range, []).
+test(range_00, [fail]):- range([], _).
+test(range_01, [fail]):- range([_],_).
 test(range_1):- range([1,2,4,6,7,8,9], R), R =:= 8.
+test(range_2):- range([1],R), R =:= 0.
 :- end_tests(range).
 
 :- begin_tests(midrange, []).
+% light testing since it is a wrapper for range/2
 test(midrange_1):- midrange([1,2,4,6,7,8,9], R), R =:= 4.
 :- end_tests(midrange).
 
 :- begin_tests(mean_absolute_deviation, []).
+% light testing since it calls other predicates
+test(mean_absolute_deviation_00, [fail]):- mean_absolute_deviation([1,_],_).
+test(mean_absolute_deviation_01, [fail]):- mean_absolute_deviation([_],_).
 test(mean_absolute_deviation_1):- mean_absolute_deviation([1,2,4,6,7,8,9],M),close_to(M,2.5306122).
 :- end_tests(mean_absolute_deviation).
 
 :- begin_tests(covariance, []).
+test(covariance_00,[fail]):- covariance([5,12,23,45],[2,8,18,20,28], _).
+test(covariance_01,[fail]):- covariance([5,12,23,45],[2,8,18,_], _).
+test(covariance_02,[fail]):- covariance([],[2,8,18,_], _).
 test(covariance_1):- covariance([5,12,18,23,45],[2,8,18,20,28], R), R =:= 146.1.
 :- end_tests(covariance).
 
 :- begin_tests(correlation, []).
+% light testing since it is a wrapper for covariance/3
+test(correlation_00,[fail]):- correlation([5,12,23,45],[2,8,18,20,28], _).
 test(correlation_1):- correlation([5,12,18,23,45],[2,8,18,20,28],C),close_to(C,0.9366).
 test(spearman_correlation_1):- spearman_correlation([5,12,18,23,45],[2,8,18,20,28],C), close_to(C,0.999999). 
 test(spearman_correlation_2):- spearman_correlation([5,12,18,23,45],[29,8,18,20,40],C), close_to(C,0.399999). 

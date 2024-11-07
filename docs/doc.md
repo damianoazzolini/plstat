@@ -90,6 +90,8 @@ mode([[1,5,64],[27,67]],M).
 
 `Percentile` is the `K`-th percentile of the list `List`.
 Both `List` and `K` can be multidimensional (lists of lists).
+Fails with a message if list is empty of if one of the lists
+of the list of lists is empty.
 
 Algorithm: arrange the data in ascending order, compute `r = (p/100)*  (n-1) + 1` where `p` is the percentile.
 If `r` is integer, then the r-th element is the desired percentile.

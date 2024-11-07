@@ -125,7 +125,6 @@ mean_(L,Mean):-
  * Example: median([[1,5,64],[27,67]],M).
  * Expected: M = [5, 47].
  * */
-% median([E],E):- number(E), !.
 median(L,Median):-
     multidim2(median_,L,Median).
 median_(Lin,Median):-
@@ -167,8 +166,10 @@ mode_(L,ModeC):-
 
 /**
  * percentile(+List:number,+K:number,-Percentile:number)
- * Percentile is the k-th percentile of the list
- * Both List and K can be multidimensional (lists of lists)
+ * Percentile is the k-th percentile of the list.
+ * Both List and K can be multidimensional (lists of lists).
+ * Fails with a message if list is empty of if one of the lists
+ * of the list of lists is empty.
  * Algorithm: arrange the data in ascending order,
  * compute r = (p/100) * (n-1) + 1 where p is the percentile
  * If r is integer, then the r-th element is the desired percentile
@@ -183,7 +184,6 @@ mode_(L,ModeC):-
  * Example: percentile([[1,2,3,4,6,5],[15,25]],[10,40],P).
  * Expected: P = [[1.5,3.0],[16.0,19.0]].
  * */
-percentile([],_,0):- !.
 percentile(L,K,Percentile):-
     ( L = [A|_], is_list(A) -> 
         maplist(percentile_list(K),L,Percentile);
@@ -195,9 +195,11 @@ percentile_list(K,L,P):-
         percentile_single(L,K,P)
     ).
 percentile_single(L,K,Percentile):-
-    ( (K =< 0 ; K >= 100) ->
-        writeln('k must be between 0 and 100'),
-        false ;
+    ground_and_numbers_and_nonempty(percentile/3,L),
+    (number(K) -> true ; writeln("percentile/3: the percentile must be a number"), false),
+    ( (K >= 0, K =< 100) -> true ; writeln("percentile/3: k must be between 0 and 100"), false),
+    ( L = [V] -> % only one value
+        Percentile = V ;
         msort(L,LS),
         length(L,N),
         R is (K / 100)*(N - 1) + 1,
@@ -211,31 +213,30 @@ percentile_single(L,K,Percentile):-
 
 /**
  * quartile(+List:number,+Q:number,-Quartile:number)
- * Quartile is the Q quartile of the list List
- * Both List and Q can be multidimensional (lists of lists)
- * Wrapper for percentile
+ * Quartile is the Q quartile of the list List.
+ * Both List and Q can be multidimensional (lists of lists).
+ * Wrapper for percentile.
  * Example: quartile([15,25],2,Q).
  * Expected: Q = 20.
  * */
 quartile(L,Q,Quartile):-
-    LQ = [1,2,3],
-    ( member(Q,LQ) ->
+    (number(Q) -> true ; writeln("quartile/3: the quartile must be a number"), false),
+    ( member(Q,[1,2,3]) ->
         !,
         QP is Q * 25, 
         percentile(L,QP,Quartile) ;
-        writeln("Insert a valid quartile (1,2, or 3)"),
+        writeln("quartile/3: the quartile must be a number among 1, 2, or 3"),
         false
     ).
 
 /**
  * iqr(+List:number,-IQR:number)
  * IQR is the inter quartile range of list List
- * computed as the difference between 3rd - 1st quartile
+ * computed as the difference between 3rd - 1st quartile.
  * List can also be multidimensional (list of lists)
  * Example: iqr([1,2,3,4,6,5],I).
  * Expected: I = 2.5.
  * */
-iqr([],_):- false.
 iqr(L,IQR):-
     quartile(L,3,III),
     quartile(L,1,I),
@@ -243,18 +244,18 @@ iqr(L,IQR):-
 
 /**
  * rms(+List:number,-RMS:number)
- * RMS is the root mean square of the list List
- * List can also be multidimensional (list of lists)
- * Square root of the sum of the squared data values divided by the number of values
+ * RMS is the root mean square of the list List.
+ * List can also be multidimensional (list of lists).
+ * Square root of the sum of the squared data values divided by the number of values.
  * Example: rms([1,5,8,3],S).
  * Expected: S = 4.97493.
  * */
 square(X,XS):-
     pow(X,2,XS).
-rms([],_):- writeln('The list for rms cannot be empty'), false.
 rms(L,RMS):-
     multidim2(rms_,L,RMS).
 rms_(L,RMS):-
+    ground_and_numbers_and_nonempty(rms/2,L),
     length(L,N),
     maplist(square,L,LS),
     sum(LS, SS),
@@ -262,8 +263,8 @@ rms_(L,RMS):-
 
 /**
  * sum_of_squares(+List:number,-SumOfSquares:number)
- * SumOfSquares is the sum of squares of the list List
- * List can also be multidimensional (list of lists)
+ * SumOfSquares is the sum of squares of the list List.
+ * List can also be multidimensional (list of lists).
  * Formula: \sum_n (x - \mu)^2
  * Example: sum_of_squares([1,2,3],S)
  * Expected: S = 2.
@@ -271,53 +272,53 @@ rms_(L,RMS):-
 diff_square(Mu,B,D):-
     AB is B - Mu,
     pow(AB,2,D).
-sum_of_squares([],0).
-sum_of_squares([_],0).
 sum_of_squares(List,SumOfSquares):-
     multidim2(sum_of_squares_,List,SumOfSquares).
 sum_of_squares_(L,SumSquared):-
+    ground_and_numbers_and_nonempty(rms/2,L),
     mean(L,Mean),
     maplist(diff_square(Mean),L,Res),
     sum(Res,SumSquared).
 
 /**
  * variance(+List:number,-Variance:number)
- * Variance is the sample variance of the list List
- * List can also be multidimensional (list of lists)
+ * Variance is the sample variance of the list List.
+ * List can also be multidimensional (list of lists).
  * Formula: (1/(N - 1)) * \sum_n (x_i - \mu)^2
  * Example: variance([1,2,4,6,7,8,9],V).
  * Expected: V = 9.2380952.
  * */
-variance([],0):- !.
-variance([E],0):- number(E), !.
 variance(L,Var):-
     multidim2(variance_,L,Var).
 variance_(L,Var):-
+    ground_and_numbers_and_nonempty(rms/2,L),
     length(L,N),
+    ( N < 2 -> writeln("variance/3: the quartile must be a number"), false ; true),
     sum_of_squares(L,SS),
     N1 is N - 1,
     Var is (1/N1) * SS.
 
 /**
  * pop_variance(+List:number,-Variance:number)
- * Variance is the population variance of the list List
- * List can also be multidimensional (list of lists)
+ * Variance is the population variance of the list List.
+ * List can also be multidimensional (list of lists).
  * Formula: (1/N) * \sum_n (x_i - \mu)^2
  * Example: pop_variance([1,4,6,72,1],V).
  * Expected: V = 765.3600.
  * */
-pop_variance([],0):- !.
-pop_variance([E],0):- number(E), !.
 pop_variance(L,Var):-
     multidim2(pop_variance_,L,Var).
 pop_variance_(L,Var):-
+    ground_and_numbers_and_nonempty(rms/2,L),
+    length(L,N),
+    ( N < 2 -> writeln("variance/3: the quartile must be a number"), false ; true),
     length(L,N),
     sum_of_squares(L,SS),
     Var is (1/N) * SS.
 
 /* std_dev(+List:numbers,-StdDev:number)
- * StdDev is the standard deviation of the list List (square root of the sample variance)
- * List can also be multidimensional (list of lists)
+ * StdDev is the standard deviation of the list List (square root of the sample variance).
+ * List can also be multidimensional (list of lists).
  * Example: std_dev([1,2,4,6,7,8,9],S).
  * Expected: S = 3.039424.
  * */
@@ -342,24 +343,23 @@ pop_std_dev_(L,StdDev):-
 /**
  * range(+List:numbers,-Range:number)
  * Range is the difference between the biggest and the smallest
- * element of the list List
- * List can also be multidimensional (list of lists)
+ * element of the list List.
+ * List can also be multidimensional (list of lists).
  * Example: range([1,2,4,6,7,8,9],R).
  * Expected: R = 8.
  * */
-range([],0):- !.
-range([E],E):- number(E), !.
 range(L,Range):-
     multidim2(range_,L,Range).
 range_(L,Range):-
+    ground_and_numbers_and_nonempty(range/2,L),
     min_val(L,Min),
     max_val(L,Max),
     Range is Max - Min.
     
 /**
  * midrange(+List:numbers,-Midrange:number)
- * Midrange is (Max - Min) / 2 of the list List (half of the range)
- * List can also be multidimensional (list of lists)
+ * Midrange is (Max - Min) / 2 of the list List (half of the range).
+ * List can also be multidimensional (list of lists).
  * Example: midrange([1,2,4,6,7,8,9],M).
  * Expected: M = 4.
  * */
@@ -380,7 +380,6 @@ midrange_(L,Midrange):-
 diff_abs(A,B,D):-
     AB is A - B,
     D is abs(AB).
-mean_absolute_deviation([],0):- !.
 mean_absolute_deviation(L,MAD):-
     multidim2(mean_absolute_deviation_,L,MAD).
 mean_absolute_deviation_(L,MAD):-
@@ -400,14 +399,10 @@ sub(A,B,C):-
     C is B - A.
 mul(A,B,C):-
     C is A * B.
-covariance(L1,L2,_):-
-    length(L1,N),
-    length(L2,M),
-    M \= N,
-    writeln('Lists must be of the same length'),
-    write('Found '), write(N), write(' '), writeln(M),
-    false.
 covariance(L1,L2,Cov):-
+    ground_and_numbers_and_nonempty(covariance/3,L1),
+    ground_and_numbers_and_nonempty(covariance/3,L2),
+    same_length_lists(covariance/3,L1,L2),
     length(L1,N),
     mean(L1,M1),
     mean(L2,M2),
@@ -426,13 +421,6 @@ covariance(L1,L2,Cov):-
  * Example: spearman_correlation([5,12,18,23,45],[2,8,18,20,28],C).
  * Expected: C = 0.999.
  * */
-correlation(L1,L2,_):-
-    length(L1,N),
-    length(L2,M),
-    M \= N,
-    writeln('Lists must be of the same length'),
-    write('Found '), write(N), write(' '), writeln(M),
-    false.
 correlation(L1,L2,Corr):-
     covariance(L1,L2,Cov),
     std_dev(L1,S1),
