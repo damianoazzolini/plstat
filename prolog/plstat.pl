@@ -25,6 +25,7 @@
     pearson_correlation/3,
     spearman_correlation/3,
     weighted_mean/3,
+    geometric_mean/2,
     harmonic_mean/2,
     trimmed_mean/4,
     trimmed_variance/4,
@@ -94,11 +95,21 @@ same_length_lists(Predicate, L1, L2):-
     ).
 
 all_positive(Predicate,W):-
-    ( maplist(=<(0),W) -> true ; write(Predicate), writeln(": all the weigths must be positive (> 0)"), false).
+    ( maplist(=<(0),W) -> true ; write(Predicate), writeln(": all the weigths must be positive (>= 0)"), false).
+all_strictly_positive(Predicate,W):-
+    ( maplist(<(0),W) -> true ; write(Predicate), writeln(": all the weigths must be positive (> 0)"), false).
 nonzerosum(Predicate,W,Sum):-
     sum(W,Sum),
     (Sum > 0 -> true ; write(Predicate), writeln(": weigths must not sum to 0"), false).
-
+check_bounds(Predicate,L,U):-
+    (number(L) -> true; write(Predicate), writeln(": lower bound must be a number."), false),
+    (number(U) -> true; write(Predicate), writeln(": upper bound must be a number."), false),
+    (L < U ->
+        true ;
+        write(Predicate),
+        writeln(": the lower bound must be smaller than the upper bound"),
+        false
+    ).
 
 /**
  * mean(+List:number,-Mean:float)
@@ -437,11 +448,22 @@ spearman_correlation(L1,L2,C):-
 /**
  * geometric_mean(+List:numbers,+Weights:numbers,-GM:number)
  * GM is the geometric mean of the list List: (\prod x_i)^(1/n)
+ * where n is the number of elements in the list.
+ * All the elements must be strictly positive (> 0).
+ * `List` can also be multidimensional (list of lists).
  * Example: geometric_mean([54, 24, 36], GM).
  * Expected: GM = 36.
- * TODO
+ * geometric_mean([[54, 24, 36],[1,2]], GM)
+ * Expected: GM = [36,1.4142135623730951].
  * */
-
+geometric_mean(L,Mean):-
+    multidim2(geometric_mean_,L,Mean).
+geometric_mean_(List, GM):-
+    ground_and_numbers_and_nonempty(geometric_mean/3,List),
+    all_strictly_positive(geometric_mean/3,List),
+    length(List,N),
+    prod(List,P),
+    GM is P**(1/N).
 
 /**
  * weighted_mean(+List:numbers,+Weights:numbers,-WM:number)
@@ -463,17 +485,18 @@ weighted_mean(List,Weights,WM):-
 /**
  * harmonic_mean(+List:numbers,-HM:number)
  * HM is the harmonic mean of list List 
- * Formula: n / (1/x1 + 1/x2 + ... + 1/xn)
- * List can also be multidimensional (list of lists)
+ * Formula: n / (1/x1 + 1/x2 + ... + 1/xn).
+ * List can also be multidimensional (list of lists).
+ * All the elements must be positive (>= 0).
  * Example: harmonic_mean([1,2,3,4,5,6,7],HM).
  * Expected: HM = 2.69972
  * */
-rec(0,_):- writeln('Cannot divide by 0'), false.
 rec(X,X1):- X1 is 1/X.
-harmonic_mean([],_):- false.
 harmonic_mean(L,HM):-
     multidim2(harmonic_mean_,L,HM).
 harmonic_mean_(L,HM):-
+    ground_and_numbers_and_nonempty(harmonic_mean/2,L),
+    all_strictly_positive(harmonic_mean/2,L),
     length(L,N),
     maplist(rec,L,LR),
     sum(LR,SLR),
@@ -483,16 +506,12 @@ harmonic_mean_(L,HM):-
  * trimmed_mean(+List:numbers,+Lower:number,+Upper:number,-TM:number)
  * TM is the trimmed mean of the list List, i.e., 
  * the mean computed by considering only numbers 
- * in the range [Lower,Upper]
+ * in the range [Lower,Upper].
  * Example: trimmed_mean([1,2,3,4,5,6,7],3,5,T).
  * Expected: T = 4
  * */
-trimmed_mean([],_,_,0).
-trimmed_mean(_,L,U,_):-
-    L > U, !,
-    writeln("The lower bound must be actually smaller than the upper bound"),
-    false.
 trimmed_mean(L,Lower,Upper,TM):-
+    check_bounds(trimmed_mean/3,Lower,Upper),
     include(between(Lower,Upper),L,LO),
     mean(LO,TM).
 

@@ -8,7 +8,7 @@
 
 `Mean` is the mean of the list `List`.
 `List` can also be multidimensional (list of lists).
-Fails with a message if list is empty of if one of the lists
+Fails with a message if list is empty or if one of the lists
 of the list of lists is empty.
 
 ```
@@ -17,6 +17,21 @@ mean([1,2,3],M).
 
 mean([[1,3,4],[7,67]],L).
 % Expected: L = [2.666,37].
+```
+
+### Geometric Mean
+`gemoetric_mean(+List:number,-Mean:float)`
+
+`Mean` is the geometric mean of the list `List`.
+`List` can also be multidimensional (list of lists).
+Fails with a message if list is empty or if the list contains
+at least one negative element or if the list sums to 0.
+```
+geometric_mean([54, 24, 36], GM).
+% Expected: GM = 36.
+
+geometric_mean([[54, 24, 36],[1,2]], GM)
+% Expected: GM = [36,1.4142135623730951].
 ```
 
 ### Weighted mean

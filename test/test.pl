@@ -23,6 +23,7 @@ test_list([
     covariance,
     correlation,
     weighted_mean,
+    geometric_mean,
     harmonic_mean,
     trimmed_mean,
     trimmed_variance,
@@ -211,12 +212,26 @@ test(weighted_mean_06, [fail]):- weighted_mean([3,8],[0,0],_).
 test(weighted_mean_1):- weighted_mean([3,8,10,17,24,27],[2,8,10,13,18,20],V),close_to(V,19.1972).
 :- end_tests(weighted_mean).
 
+:- begin_tests(geometric_mean, []).
+test(geometric_mean_00, [fail]):- geometric_mean([-4,4],_).
+test(geometric_mean_01, [fail]):- geometric_mean([4,4,-1],_).
+test(geometric_mean_01, [fail]):- geometric_mean([0,0,0],_).
+test(geometric_mean_02, [fail]):- geometric_mean([],_).
+test(geometric_mean_1):- geometric_mean([54, 24, 36], GM),close_to(GM,36).
+test(geometric_mean_1):- geometric_mean([[54, 24, 36],[1,2]], GM), E = [36,1.4142135623730951], maplist(close_to,GM,E).
+:- end_tests(geometric_mean).
+
 :- begin_tests(harmonic_mean, []).
+test(harmonic_mean_00, [fail]):- harmonic_mean([],_).
+test(harmonic_mean_01, [fail]):- harmonic_mean([2,-1],_).
 test(harmonic_mean_1):- harmonic_mean([1,2,3,4,5,6,7],V),close_to(V,2.69972).
 test(harmonic_mean_2):- harmonic_mean([1,4],V),close_to(V,1.6).
+test(harmonic_mean_3):- harmonic_mean([[1,4],[1,4]],V), E = [1.6,1.6], maplist(close_to,V,E).
 :- end_tests(harmonic_mean).
 
 :- begin_tests(trimmed_mean, []).
+test(trimmed_mean_00,[fail]):- trimmed_mean([],_,_,_).
+test(trimmed_mean_01,[fail]):- trimmed_mean([1,2,3,4,5,6,7],3,1,_).
 test(trimmed_mean_1):- trimmed_mean([1,2,3,4,5,6,7],3,5,4).
 :- end_tests(trimmed_mean).
 
