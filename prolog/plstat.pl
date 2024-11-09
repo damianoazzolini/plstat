@@ -519,16 +519,12 @@ trimmed_mean(L,Lower,Upper,TM):-
  * trimmed_variance(+List:numbers,+Lower:number,+Upper:number,-TV:number)
  * TV is the trimmed variance of the list List, i.e, 
  * the variance computed by considering only numbers 
- * in the range [Lower,Upper]
+ * in the range [Lower,Upper].
  * Example: trimmed_variance([1,2,3,4,5,6,7],3,5,V).
  * Expected: V = 1.0
  * */
-trimmed_variance([],_,_,0).
-trimmed_variance(_,L,U,_):-
-    L > U, !,
-    writeln("The lower bound must be actually smaller than the upper bound"),
-    false.
 trimmed_variance(L,Lower,Upper,TV):-
+    check_bounds(trimmed_variance/3,Lower,Upper),
     include(between(Lower,Upper),L,LO),
     variance(LO,TV).
 
@@ -542,24 +538,26 @@ trimmed_variance(L,Lower,Upper,TV):-
 diff_and_power(Exp,Mean,Number,R):-
     D is Number - Mean,
     pow(D,Exp,R).
-moment([],_,0).
 moment(L,M,Moment):-
+    ground_and_numbers_and_nonempty(moment/3,L),
+    (number(M) -> true; writeln("moment/3: moment must be a number."), false),
+    (M > 0 -> true ; writeln("moment/3: moment must be a positive (>0) number."), false),
     length(L,N),
     mean(L,Mean),
     maplist(diff_and_power(M,Mean),L,Res),
     sum(Res,S),
-    Moment is 1/N * S.
+    Moment is (1/N) * S.
 
 /**
  * skew(+List:numbers,-Skew:number)
- * Skew is the sample skewness of list List
+ * Skew is the sample skewness of list List.
  * Formula: m_3 / (m_2)^(3/2)
+ * where m_3 and m_2 are respectively the third and second moment.
  * List can also be multidimensional (list of lists)
  * Example: skew([2,8,0,4,1,9,9,0],S).
  * Expected: S = 0.26505541
  * TODO: consider also the version with bias false
  * */
-skew([],0):- !.
 skew(L,Skew):-
     multidim2(skew_,L,Skew).
 skew_(List,Skew):-
@@ -576,7 +574,6 @@ skew_(List,Skew):-
  * Example: kurtosis([3,5,7,2,7],K).
  * Expected: K = 1.3731508875.
  * */
-kurtosis([],0).
 kurtosis(L,Kurtosis):-
     multidim2(kurtosis_,L,Kurtosis).
 kurtosis_(List,Kurtosis):-
@@ -620,6 +617,7 @@ rank(L,Rank):-
     rank(L,average,Rank).
 rank(LL,Mode,Rank):-
     flatten(LL,L),
+    ground_and_numbers_and_nonempty(rank/3,L),
     msort(L,LS),
     (   Mode = dense ->    
     	compute_dense(LS,LS,1,LR);

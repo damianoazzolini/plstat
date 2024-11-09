@@ -289,7 +289,8 @@ moment([1,2,3,4,5],2,MO).
 ### Skew
 `skew(+List:numbers,-Skew:number)`
 
-`Skew` is the sample skewness of list `List`. Formula: m_3 / (m_2)^(3/2).
+`Skew` is the sample skewness of list `List`. Formula: m_3 / (m_2)^(3/2)
+where m_3 and m_2 are respectively the third and second moment.
 `List` can also be multidimensional (list of lists).
 ```
 skew([2,8,0,4,1,9,9,0],S).

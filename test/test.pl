@@ -236,33 +236,45 @@ test(trimmed_mean_1):- trimmed_mean([1,2,3,4,5,6,7],3,5,4).
 :- end_tests(trimmed_mean).
 
 :- begin_tests(trimmed_variance, []).
+test(trimmed_variance_00,[fail]):- trimmed_variance([],_,_,_).
+test(trimmed_variance_01,[fail]):- trimmed_variance([1,2,3,4,5,6,7],3,1,_).
 test(trimmed_variance_1):- trimmed_variance([1,2,3,4,5,6,7],3,5,1.0).
 :- end_tests(trimmed_variance).
 
 :- begin_tests(moment, []).
+test(moment_00, [fail]):- moment([],_,_).
+test(moment_01, [fail]):- moment([1,2],0,_).
+test(moment_02, [fail]):- moment([1,2],-2,_).
 test(moment_1):- moment([1,2,3,4,5],1,0.0).
 test(moment_2):- moment([1,2,3,4,5],2,2.0).
 :- end_tests(moment).
 
 :- begin_tests(skew, []).
+% light testing since it is a wrapper for moment/3
+test(skew_0, [fail]):- skew([],_).
 test(skew_1):- skew([2,8,0,4,1,9,9,0],V),close_to(V,0.26505541).
 test(skew_2):- skew([1,2,3,4,5],0.0).
 test(skew_3):- skew([2,4,7,3,2],V),close_to(V,0.9704949).
 :- end_tests(skew).
 
 :- begin_tests(kurtosis, []).
+% light testing since it is a wrapper for moment/3
+test(kurtosis_0, [fail]):- kurtosis([],_).
 test(kurtosis_1):- kurtosis([26,12,16,56,112,24],K),close_to(K,3.05052136).
 test(kurtosis_2):- kurtosis([3,5,7,2,7],K),close_to(K,1.37315088757).
 :- end_tests(kurtosis).
 
 :- begin_tests(rank, []).
-test(rank_1):- rank([0,2,3,2],[1,2.5,4,2.5]).
-test(rank_2):- rank([0,2,3,2],average,[1,2.5,4,2.5]).
-test(rank_3):- rank([0,2,3,2],min,[1,2,4,2]).
-test(rank_4):- rank([0,2,3,2],max,[1,3,4,3]).
-test(rank_5):- rank([0,2,3,2],dense,[1,2,3,2]).
-test(rank_6):- rank([0,2,3,2],ordinal,[1,2,4,3]).
-test(rank_7):- rank([[0,2,3,2],[1,4,5]],max,[[1,4,5,4],[2,6,7]]).
+test(rank_00, [fail]):- rank([],_).
+test(rank_01, [fail]):- rank([2,a],_).
+test(rank_02, [fail]):- rank([2,3],opt,_).
+test(rank_1):- rank([0,2,3,2],L), ground(L), L = [1,2.5,4,2.5].
+test(rank_2):- rank([0,2,3,2],average,L), ground(L), L = [1,2.5,4,2.5].
+test(rank_3):- rank([0,2,3,2],min,L), ground(L), L = [1,2,4,2].
+test(rank_4):- rank([0,2,3,2],max,L), ground(L), L = [1,3,4,3].
+test(rank_5):- rank([0,2,3,2],dense,L), ground(L), L = [1,2,3,2].
+test(rank_6):- rank([0,2,3,2],ordinal,L), ground(L), L = [1,2,4,3].
+test(rank_7):- rank([[0,2,3,2],[1,4,5]],max,L), ground(L), L = [[1,4,5,4],[2,6,7]].
 :- end_tests(rank).
 
 % other utils
